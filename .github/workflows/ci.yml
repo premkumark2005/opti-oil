@@ -1,0 +1,103 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Backend Tests and Linting
+  backend:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run backend linter
+      working-directory: ./backend
+      run: npm run lint --if-present
+    
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test --if-present
+      env:
+        NODE_ENV: test
+        MONGO_URI: mongodb://localhost:27017/opti-oil-test
+        JWT_SECRET: test-secret-key
+    
+    - name: Check for security vulnerabilities
+      working-directory: ./backend
+      run: npm audit --audit-level=moderate
+
+  # Frontend Tests and Linting
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Run frontend linter
+      working-directory: ./frontend
+      run: npm run lint --if-present
+    
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: npm test --if-present
+    
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+    
+    - name: Check for security vulnerabilities
+      working-directory: ./frontend
+      run: npm audit --audit-level=moderate
+
+  # Code Quality Check
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Run code quality checks
+      run: |
+        echo "Running code quality checks..."
+        # Add your preferred code quality tools here
+        # e.g., SonarQube, CodeClimate, etc.
