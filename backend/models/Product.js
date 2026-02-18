@@ -85,10 +85,9 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for faster queries
+// Indexes for faster queries (sku index is already created by unique: true)
 productSchema.index({ name: 1 });
 productSchema.index({ category: 1 });
-productSchema.index({ sku: 1 });
 productSchema.index({ isActive: 1 });
 productSchema.index({ basePrice: 1 });
 

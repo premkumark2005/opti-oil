@@ -746,3 +746,4 @@ export const getProductPerformanceReport = asyncHandler(async (req, res, next) =
     generatedAt: new Date()
   }, 'Product performance report generated successfully');
 });
+

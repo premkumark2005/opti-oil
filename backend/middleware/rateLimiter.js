@@ -9,7 +9,7 @@ const ApiResponse = require('../utils/apiResponse');
 // General API rate limiter
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 for dev, 100 for production
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -24,7 +24,7 @@ const apiLimiter = rateLimit({
 // Strict limiter for authentication routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login attempts per windowMs
+  max: process.env.NODE_ENV === 'production' ? 5 : 100, // 100 for dev, 5 for production
   skipSuccessfulRequests: true,
   message: 'Too many login attempts, please try again after 15 minutes.',
   handler: (req, res) => {
@@ -38,7 +38,7 @@ const authLimiter = rateLimit({
 // Moderate limiter for order creation
 const orderLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit to 10 orders per hour
+  max: process.env.NODE_ENV === 'production' ? 10 : 100, // 100 for dev, 10 for production
   skipSuccessfulRequests: false,
   handler: (req, res) => {
     return ApiResponse.error(res, {

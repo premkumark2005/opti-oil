@@ -14,8 +14,8 @@
 }
 
 .badge-success {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #dcfce7;
+  color: var(--success-color);
 }
 
 .badge-warning {
@@ -25,12 +25,12 @@
 
 .badge-danger {
   background-color: #fee2e2;
-  color: #991b1b;
+  color: var(--danger-color);
 }
 
 .badge-info {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: var(--primary-color);
 }
 
 .badge-primary {

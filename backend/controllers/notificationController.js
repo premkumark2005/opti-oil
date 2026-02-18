@@ -17,7 +17,7 @@ export const getNotifications = asyncHandler(async (req, res, next) => {
 
   // Filter by read status
   if (req.query.isRead !== undefined) {
-    filter.isRead = req.query.isRead === 'true';
+    filter.isRead = req.query.isRead === 'true' || req.query.isRead === true;
   }
 
   // Filter by type
@@ -36,7 +36,7 @@ export const getNotifications = asyncHandler(async (req, res, next) => {
 
   sendPaginatedResponse(
     res,
-    notifications,
+    { notifications },
     page,
     limit,
     total,

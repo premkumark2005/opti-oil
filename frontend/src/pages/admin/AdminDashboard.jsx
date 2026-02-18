@@ -38,24 +38,30 @@ const AdminDashboard = () => {
   // Fetch low stock products
   const { data: lowStockData } = useQuery('lowStock', () => inventoryService.getLowStockProducts());
 
+  // Fetch top products by stock level for chart
+  const { data: topProductsData } = useQuery('topProducts', () => inventoryService.getTopProductsByStock(10));
+
   // Fetch pending orders
   const { data: pendingOrdersData } = useQuery('pendingOrders', () => orderService.getPendingOrders());
 
   // Fetch order stats
   const { data: orderStats } = useQuery('orderStats', () => orderService.getOrderStats());
 
+  // Fetch monthly revenue data
+  const { data: monthlyRevenueData } = useQuery('monthlyRevenue', () => orderService.getMonthlyRevenue());
+
   useEffect(() => {
-    if (productStats?.data?.data) {
-      setStats(prev => ({ ...prev, totalProducts: productStats.data.data.totalProducts || 0 }));
+    if (productStats?.data?.data?.stats?.overallStats?.[0]) {
+      setStats(prev => ({ ...prev, totalProducts: productStats.data.data.stats.overallStats[0].totalProducts || 0 }));
     }
-    if (lowStockData?.data?.data) {
-      setStats(prev => ({ ...prev, lowStockItems: lowStockData.data.data.length || 0 }));
+    if (lowStockData?.data?.data?.items) {
+      setStats(prev => ({ ...prev, lowStockItems: lowStockData.data.data.items.length || 0 }));
     }
-    if (pendingOrdersData?.data?.data) {
-      setStats(prev => ({ ...prev, pendingOrders: pendingOrdersData.data.data.length || 0 }));
+    if (pendingOrdersData?.data?.data?.orders) {
+      setStats(prev => ({ ...prev, pendingOrders: pendingOrdersData.data.data.orders.length || 0 }));
     }
-    if (orderStats?.data?.data) {
-      setStats(prev => ({ ...prev, totalRevenue: orderStats.data.data.totalRevenue || 0 }));
+    if (orderStats?.data?.data?.stats?.overallStats?.[0]) {
+      setStats(prev => ({ ...prev, totalRevenue: orderStats.data.data.stats.overallStats[0].totalRevenue || 0 }));
     }
   }, [productStats, lowStockData, pendingOrdersData, orderStats]);
 
@@ -169,24 +175,17 @@ const AdminDashboard = () => {
           <div style={{ height: '300px' }}>
             <DoughnutChart
               data={{
-                labels: ['Pending', 'Approved', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+                labels: orderStats?.data?.data?.stats?.statusDistribution?.map(s => s._id.charAt(0).toUpperCase() + s._id.slice(1)) || [],
                 datasets: [
                   {
-                    data: [
-                      pendingOrdersData?.data?.data?.filter(o => o.orderStatus === 'pending').length || 0,
-                      pendingOrdersData?.data?.data?.filter(o => o.orderStatus === 'approved').length || 0,
-                      pendingOrdersData?.data?.data?.filter(o => o.orderStatus === 'processing').length || 0,
-                      pendingOrdersData?.data?.data?.filter(o => o.orderStatus === 'shipped').length || 0,
-                      pendingOrdersData?.data?.data?.filter(o => o.orderStatus === 'delivered').length || 0,
-                      pendingOrdersData?.data?.data?.filter(o => o.orderStatus === 'cancelled').length || 0,
-                    ],
+                    data: orderStats?.data?.data?.stats?.statusDistribution?.map(s => s.count) || [],
                     backgroundColor: [
-                      '#f39c12',
-                      '#2ecc71',
-                      '#3498db',
-                      '#9b59b6',
-                      '#1abc9c',
-                      '#e74c3c',
+                      '#F59E0B',  // Warning - Orange
+                      '#16A34A',  // Success - Green
+                      '#2563EB',  // Accent - Blue
+                      '#9333EA',  // Purple
+                      '#06B6D4',  // Cyan
+                      '#DC2626',  // Danger - Red
                     ],
                   },
                 ],
@@ -204,9 +203,9 @@ const AdminDashboard = () => {
                 datasets: [
                   {
                     label: 'Revenue ($)',
-                    data: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 35000, 32000, 40000, 38000, 45000],
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    data: monthlyRevenueData?.data?.data?.monthlyRevenue?.map(m => m.revenue) || Array(12).fill(0),
+                    borderColor: '#1E3A8A',  // Primary - Deep Blue
+                    backgroundColor: 'rgba(30, 58, 138, 0.1)',
                     fill: true,
                     tension: 0.4,
                   },
@@ -223,19 +222,19 @@ const AdminDashboard = () => {
           <div style={{ height: '300px' }}>
             <BarChart
               data={{
-                labels: lowStockData?.data?.data?.slice(0, 10).map(item => item.product?.name || 'Unknown') || [],
+                labels: topProductsData?.data?.data?.items?.map(item => item.product?.name || 'Unknown') || [],
                 datasets: [
                   {
                     label: 'Available Quantity',
-                    data: lowStockData?.data?.data?.slice(0, 10).map(item => item.availableQuantity) || [],
-                    backgroundColor: lowStockData?.data?.data?.slice(0, 10).map(item => 
-                      item.availableQuantity < item.reorderLevel ? 'rgba(231, 76, 60, 0.7)' : 'rgba(46, 204, 113, 0.7)'
+                    data: topProductsData?.data?.data?.items?.map(item => item.availableQuantity) || [],
+                    backgroundColor: topProductsData?.data?.data?.items?.map(item => 
+                      item.availableQuantity < item.reorderLevel ? 'rgba(220, 38, 38, 0.7)' : 'rgba(22, 163, 74, 0.7)'
                     ) || [],
                   },
                   {
                     label: 'Reorder Level',
-                    data: lowStockData?.data?.data?.slice(0, 10).map(item => item.reorderLevel) || [],
-                    backgroundColor: 'rgba(241, 196, 15, 0.5)',
+                    data: topProductsData?.data?.data?.items?.map(item => item.reorderLevel) || [],
+                    backgroundColor: 'rgba(245, 158, 11, 0.5)',  // Warning - Orange
                   },
                 ],
               }}
@@ -246,10 +245,10 @@ const AdminDashboard = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
         <Card title="Pending Orders" actions={<Link to="/admin/orders">View All</Link>}>
-          {pendingOrdersData?.data?.data?.length > 0 ? (
+          {pendingOrdersData?.data?.data?.orders?.length > 0 ? (
             <Table
               columns={orderColumns}
-              data={pendingOrdersData.data.data.slice(0, 5)}
+              data={pendingOrdersData.data.data.orders.slice(0, 5)}
             />
           ) : (
             <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>
@@ -259,14 +258,16 @@ const AdminDashboard = () => {
         </Card>
 
         <Card title="Low Stock Alert" actions={<Link to="/admin/inventory">View All</Link>}>
-          {lowStockData?.data?.data?.length > 0 ? (
+          {lowStockData?.data?.data?.items?.length > 0 ? (
             <Table
               columns={lowStockColumns}
-              data={lowStockData.data.data.slice(0, 5)}
+              data={lowStockData.data.data.items.slice(0, 5)}
             />
           ) : (
             <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>
-              All products are well stocked
+              {stats.totalProducts === 0 
+                ? 'No products added yet. Add products to monitor stock levels.' 
+                : 'All products are well stocked'}
             </p>
           )}
         </Card>

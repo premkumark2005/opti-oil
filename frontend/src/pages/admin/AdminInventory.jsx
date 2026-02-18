@@ -17,13 +17,13 @@ const AdminInventory = () => {
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [selectedInventory, setSelectedInventory] = useState(null);
   const [stockInData, setStockInData] = useState({
-    product: '',
+    productId: '',
     quantity: '',
     unitCost: '',
     referenceNumber: ''
   });
   const [stockOutData, setStockOutData] = useState({
-    product: '',
+    productId: '',
     quantity: '',
     referenceNumber: ''
   });
@@ -44,7 +44,7 @@ const AdminInventory = () => {
         queryClient.invalidateQueries('inventory');
         toast.success('Stock added successfully');
         setShowStockInModal(false);
-        setStockInData({ product: '', quantity: '', unitCost: '', referenceNumber: '' });
+        setStockInData({ productId: '', quantity: '', unitCost: '', referenceNumber: '' });
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to add stock');
@@ -59,7 +59,7 @@ const AdminInventory = () => {
         queryClient.invalidateQueries('inventory');
         toast.success('Stock removed successfully');
         setShowStockOutModal(false);
-        setStockOutData({ product: '', quantity: '', referenceNumber: '' });
+        setStockOutData({ productId: '', quantity: '', referenceNumber: '' });
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to remove stock');
@@ -226,10 +226,10 @@ const AdminInventory = () => {
         <form onSubmit={handleStockIn}>
           <FormInput
             label="Product"
-            name="product"
+            name="productId"
             type="select"
-            value={stockInData.product}
-            onChange={(e) => setStockInData({ ...stockInData, product: e.target.value })}
+            value={stockInData.productId}
+            onChange={(e) => setStockInData({ ...stockInData, productId: e.target.value })}
             options={productOptions}
             required
           />
@@ -286,10 +286,10 @@ const AdminInventory = () => {
         <form onSubmit={handleStockOut}>
           <FormInput
             label="Product"
-            name="product"
+            name="productId"
             type="select"
-            value={stockOutData.product}
-            onChange={(e) => setStockOutData({ ...stockOutData, product: e.target.value })}
+            value={stockOutData.productId}
+            onChange={(e) => setStockOutData({ ...stockOutData, productId: e.target.value })}
             options={productOptions}
             required
           />

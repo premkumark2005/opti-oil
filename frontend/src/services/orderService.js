@@ -19,5 +19,7 @@ export const orderService = {
   
   cancelOrder: (id, reason) => api.put(`/orders/${id}/cancel`, { reason }),
   
-  getOrderStats: () => api.get('/orders/stats')
+  getOrderStats: () => api.get('/orders/stats'),
+  
+  getMonthlyRevenue: () => api.get('/orders/revenue/monthly')
 };

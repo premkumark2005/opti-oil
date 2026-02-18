@@ -149,7 +149,7 @@ export const getAllSuppliers = asyncHandler(async (req, res, next) => {
     .skip(skip)
     .limit(limit);
 
-  sendPaginatedResponse(res, suppliers, page, limit, total, 'Suppliers retrieved successfully');
+  sendPaginatedResponse(res, { suppliers }, page, limit, total, 'Suppliers retrieved successfully');
 });
 
 /**

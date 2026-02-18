@@ -5,6 +5,7 @@ import {
   getProductInventory,
   getAllInventory,
   getLowStockProducts,
+  getTopProductsByStock,
   updateReorderLevel,
   getInventoryTransactions,
   adjustInventory
@@ -30,6 +31,7 @@ router.post('/adjust', isAdmin, validateInventoryAdjustment, adjustInventory);
 // Inventory queries
 router.get('/', getAllInventory);
 router.get('/low-stock', isAdmin, getLowStockProducts);
+router.get('/top-products', isAdmin, getTopProductsByStock);
 router.get('/product/:productId', getProductInventory);
 router.get('/transactions', isAdmin, getInventoryTransactions);
 

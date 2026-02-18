@@ -5,18 +5,44 @@
 }
 
 :root {
-  --primary-color: #2563eb;
-  --primary-dark: #1e40af;
-  --secondary-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
+  /* Primary - Deep Blue */
+  --primary-color: #1E3A8A;
+  --primary-dark: #1e3a8a;
+  --primary-light: #3b82f6;
+  --primary-hover: #1e40af;
+  
+  /* Accent - Blue */
+  --accent-color: #2563EB;
+  --accent-hover: #1d4ed8;
+  
+  /* Status Colors */
+  --secondary-color: #16A34A;
+  --success-color: #16A34A;
+  --warning-color: #F59E0B;
+  --danger-color: #DC2626;
+  
+  /* Text Colors */
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
+  --text-light: #9ca3af;
+  
+  /* Background Colors */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F3F4F6;
+  --bg-card: #FFFFFF;
+  
+  /* Border & Shadow */
   --border-color: #e5e7eb;
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --border-color-focus: #2563EB;
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-hover: 0 10px 20px -3px rgb(0 0 0 / 0.15);
+  
+  /* Border Radius */
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
 }
 
 body {
@@ -46,4 +72,227 @@ input, select, textarea {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+/* ============================================
+   BUTTON STYLES - Enhanced with new colors
+   ============================================ */
+button {
+  border-radius: var(--radius);
+  transition: all 0.2s ease-in-out;
+  box-shadow: var(--shadow);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary Button Variants */
+button[class*="primary"],
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+button[class*="primary"]:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+/* Success Button Variants */
+button[class*="success"],
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+button[class*="success"]:hover:not(:disabled),
+.btn-success:hover:not(:disabled) {
+  background-color: #15803d;
+}
+
+/* Danger Button Variants */
+button[class*="danger"],
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+button[class*="danger"]:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+/* Warning Button Variants */
+button[class*="warning"],
+.btn-warning {
+  background-color: var(--warning-color);
+  color: white;
+}
+
+button[class*="warning"]:hover:not(:disabled),
+.btn-warning:hover:not(:disabled) {
+  background-color: #d97706;
+}
+
+/* ============================================
+   CARD STYLES - Enhanced with shadows
+   ============================================ */
+[class*="card"],
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+[class*="card"]:hover,
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================
+   TABLE STYLES - Alternating rows & hover
+   ============================================ */
+table {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+table thead {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+table thead th {
+  padding: 1rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+table tbody tr {
+  transition: background-color 0.15s ease-in-out;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: var(--bg-secondary);
+}
+
+table tbody tr:hover {
+  background-color: #dbeafe;
+}
+
+table tbody td {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ============================================
+   FORM STYLES - Improved inputs
+   ============================================ */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 0.625rem 0.875rem;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  background-color: var(--bg-primary);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--border-color-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Input Error State */
+input.error,
+select.error,
+textarea.error {
+  border-color: var(--danger-color);
+}
+
+input.error:focus,
+select.error:focus,
+textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ============================================
+   BADGE/STATUS STYLES
+   ============================================ */
+.badge,
+[class*="badge"] {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: #dcfce7;
+  color: var(--success-color);
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-danger {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+}
+
+.badge-primary {
+  background-color: #dbeafe;
+  color: var(--primary-color);
+}
+
+/* ============================================
+   LINK STYLES
+   ============================================ */
+a[class*="link"],
+.link {
+  color: var(--accent-color);
+  transition: color 0.2s ease-in-out;
+}
+
+a[class*="link"]:hover,
+.link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* ============================================
+   FOCUS VISIBLE for Accessibility
+   ============================================ */
+*:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }

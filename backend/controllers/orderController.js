@@ -27,102 +27,85 @@ export const placeOrder = asyncHandler(async (req, res, next) => {
     return next(new AppError('Order must contain at least one item', HTTP_STATUS.BAD_REQUEST));
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // Validate and prepare order items
+  const orderItems = [];
+  let totalAmount = 0;
 
-  try {
-    // Validate and prepare order items
-    const orderItems = [];
-    let totalAmount = 0;
-
-    for (const item of items) {
-      // Get product details
-      const product = await Product.findById(item.productId).session(session);
-      if (!product) {
-        await session.abortTransaction();
-        return next(new AppError(`Product not found: ${item.productId}`, HTTP_STATUS.NOT_FOUND));
-      }
-
-      if (!product.isActive) {
-        await session.abortTransaction();
-        return next(new AppError(`Product is not available: ${product.name}`, HTTP_STATUS.BAD_REQUEST));
-      }
-
-      // Check stock availability
-      const inventory = await Inventory.findOne({ product: product._id }).session(session);
-      if (!inventory) {
-        await session.abortTransaction();
-        return next(new AppError(`No inventory found for product: ${product.name}`, HTTP_STATUS.BAD_REQUEST));
-      }
-
-      if (!inventory.hasAvailableStock(item.quantity)) {
-        await session.abortTransaction();
-        return next(new AppError(
-          `Insufficient stock for ${product.name}. Available: ${inventory.availableQuantity}, Requested: ${item.quantity}`,
-          HTTP_STATUS.BAD_REQUEST
-        ));
-      }
-
-      // Reserve stock for this order
-      inventory.reserveStock(item.quantity);
-      inventory.updatedBy = req.user.id;
-      await inventory.save({ session });
-
-      // Prepare order item
-      const orderItem = {
-        product: product._id,
-        productName: product.name,
-        sku: product.sku,
-        quantity: item.quantity,
-        unitPrice: product.basePrice,
-        subtotal: item.quantity * product.basePrice
-      };
-
-      orderItems.push(orderItem);
-      totalAmount += orderItem.subtotal;
+  for (const item of items) {
+    // Get product details
+    const product = await Product.findById(item.productId);
+    if (!product) {
+      return next(new AppError(`Product not found: ${item.productId}`, HTTP_STATUS.NOT_FOUND));
     }
 
-    // Create order
-    const order = await Order.create([{
-      wholesaler: req.user.id,
-      items: orderItems,
-      totalAmount,
-      shippingAddress: shippingAddress || req.user.address,
-      notes,
-      orderStatus: ORDER_STATUS.PENDING
-    }], { session });
-
-    await session.commitTransaction();
-
-    const populatedOrder = await Order.findById(order[0]._id)
-      .populate('wholesaler', 'name email businessName')
-      .populate('items.product', 'name category unit');
-
-    // Send notification to admins about new order
-    const adminIds = await getAdminUserIds();
-    if (adminIds.length > 0) {
-      await notifyNewOrder(populatedOrder, adminIds);
+    if (!product.isActive) {
+      return next(new AppError(`Product is not available: ${product.name}`, HTTP_STATUS.BAD_REQUEST));
     }
 
-    // Emit real-time event to admins
-    emitToAdmins('new_order', {
-      orderId: populatedOrder._id,
-      orderNumber: populatedOrder.orderNumber,
-      wholesaler: populatedOrder.wholesaler?.businessName || populatedOrder.wholesaler?.name,
-      totalAmount: populatedOrder.totalAmount,
-      itemsCount: populatedOrder.items.length
-    });
+    // Check stock availability
+    const inventory = await Inventory.findOne({ product: product._id });
+    if (!inventory) {
+      return next(new AppError(`No inventory found for product: ${product.name}`, HTTP_STATUS.BAD_REQUEST));
+    }
 
-    sendSuccess(res, HTTP_STATUS.CREATED, {
-      order: populatedOrder
-    }, 'Order placed successfully. Awaiting admin approval.');
+    if (!inventory.hasAvailableStock(item.quantity)) {
+      return next(new AppError(
+        `Insufficient stock for ${product.name}. Available: ${inventory.availableQuantity}, Requested: ${item.quantity}`,
+        HTTP_STATUS.BAD_REQUEST
+      ));
+    }
 
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
+    // Reserve stock for this order
+    inventory.reserveStock(item.quantity);
+    inventory.updatedBy = req.user.id;
+    await inventory.save();
+
+    // Prepare order item
+    const orderItem = {
+      product: product._id,
+      productName: product.name,
+      sku: product.sku,
+      quantity: item.quantity,
+      unitPrice: product.basePrice,
+      subtotal: item.quantity * product.basePrice
+    };
+
+    orderItems.push(orderItem);
+    totalAmount += orderItem.subtotal;
   }
+
+  // Create order
+  const order = await Order.create({
+    wholesaler: req.user.id,
+    items: orderItems,
+    totalAmount,
+    shippingAddress: shippingAddress || req.user.address,
+    notes,
+    orderStatus: ORDER_STATUS.PENDING
+  });
+
+  const populatedOrder = await Order.findById(order._id)
+    .populate('wholesaler', 'name email businessName')
+    .populate('items.product', 'name category unit');
+
+  // Send notification to admins about new order
+  const adminIds = await getAdminUserIds();
+  if (adminIds.length > 0) {
+    await notifyNewOrder(populatedOrder, adminIds);
+  }
+
+  // Emit real-time event to admins
+  emitToAdmins('new_order', {
+    orderId: populatedOrder._id,
+    orderNumber: populatedOrder.orderNumber,
+    wholesaler: populatedOrder.wholesaler?.businessName || populatedOrder.wholesaler?.name,
+    totalAmount: populatedOrder.totalAmount,
+    itemsCount: populatedOrder.items.length
+  });
+
+  sendSuccess(res, HTTP_STATUS.CREATED, {
+    order: populatedOrder
+  }, 'Order placed successfully. Awaiting admin approval.');
 });
 
 /**
@@ -133,68 +116,53 @@ export const placeOrder = asyncHandler(async (req, res, next) => {
 export const approveOrder = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const order = await Order.findById(id);
 
-  try {
-    const order = await Order.findById(id).session(session);
-
-    if (!order) {
-      await session.abortTransaction();
-      return next(new AppError('Order not found', HTTP_STATUS.NOT_FOUND));
-    }
-
-    if (order.orderStatus !== ORDER_STATUS.PENDING) {
-      await session.abortTransaction();
-      return next(new AppError('Only pending orders can be approved', HTTP_STATUS.BAD_REQUEST));
-    }
-
-    // Approve order
-    order.approve(req.user.id);
-
-    // Process inventory - convert reserved stock to actual stock-out
-    for (const item of order.items) {
-      const inventory = await Inventory.findOne({ product: item.product }).session(session);
-      
-      if (!inventory) {
-        await session.abortTransaction();
-        return next(new AppError(`Inventory not found for product: ${item.productName}`, HTTP_STATUS.NOT_FOUND));
-      }
-
-      // Confirm stock out (reduces reserved quantity)
-      inventory.confirmStockOut(item.quantity);
-      inventory.updatedBy = req.user.id;
-      await inventory.save({ session });
-    }
-
-    await order.save({ session });
-    await session.commitTransaction();
-
-    const populatedOrder = await Order.findById(order._id)
-      .populate('wholesaler', 'name email businessName')
-      .populate('items.product', 'name category')
-      .populate('approvedBy', 'name email');
-
-    // Send notification to wholesaler
-    await notifyOrderApproved(populatedOrder);
-
-    // Emit real-time event to wholesaler
-    emitToUser(populatedOrder.wholesaler._id, 'order_approved', {
-      orderId: populatedOrder._id,
-      orderNumber: populatedOrder.orderNumber,
-      status: 'approved'
-    });
-
-    sendSuccess(res, HTTP_STATUS.OK, {
-      order: populatedOrder
-    }, 'Order approved successfully. Inventory updated.');
-
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
+  if (!order) {
+    return next(new AppError('Order not found', HTTP_STATUS.NOT_FOUND));
   }
+
+  if (order.orderStatus !== ORDER_STATUS.PENDING) {
+    return next(new AppError('Only pending orders can be approved', HTTP_STATUS.BAD_REQUEST));
+  }
+
+  // Approve order
+  order.approve(req.user.id);
+
+  // Process inventory - convert reserved stock to actual stock-out
+  for (const item of order.items) {
+    const inventory = await Inventory.findOne({ product: item.product });
+    
+    if (!inventory) {
+      return next(new AppError(`Inventory not found for product: ${item.productName}`, HTTP_STATUS.NOT_FOUND));
+    }
+
+    // Confirm stock out (reduces reserved quantity)
+    inventory.confirmStockOut(item.quantity);
+    inventory.updatedBy = req.user.id;
+    await inventory.save();
+  }
+
+  await order.save();
+
+  const populatedOrder = await Order.findById(order._id)
+    .populate('wholesaler', 'name email businessName')
+    .populate('items.product', 'name category')
+    .populate('approvedBy', 'name email');
+
+  // Send notification to wholesaler
+  await notifyOrderApproved(populatedOrder);
+
+  // Emit real-time event to wholesaler
+  emitToUser(populatedOrder.wholesaler._id, 'order_approved', {
+    orderId: populatedOrder._id,
+    orderNumber: populatedOrder.orderNumber,
+    status: 'approved'
+  });
+
+  sendSuccess(res, HTTP_STATUS.OK, {
+    order: populatedOrder
+  }, 'Order approved successfully. Inventory updated.');
 });
 
 /**
@@ -210,64 +178,50 @@ export const rejectOrder = asyncHandler(async (req, res, next) => {
     return next(new AppError('Please provide a rejection reason', HTTP_STATUS.BAD_REQUEST));
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const order = await Order.findById(id);
 
-  try {
-    const order = await Order.findById(id).session(session);
-
-    if (!order) {
-      await session.abortTransaction();
-      return next(new AppError('Order not found', HTTP_STATUS.NOT_FOUND));
-    }
-
-    if (order.orderStatus !== ORDER_STATUS.PENDING) {
-      await session.abortTransaction();
-      return next(new AppError('Only pending orders can be rejected', HTTP_STATUS.BAD_REQUEST));
-    }
-
-    // Reject order
-    order.reject(req.user.id, reason);
-
-    // Release reserved stock
-    for (const item of order.items) {
-      const inventory = await Inventory.findOne({ product: item.product }).session(session);
-      
-      if (inventory) {
-        inventory.releaseStock(item.quantity);
-        inventory.updatedBy = req.user.id;
-        await inventory.save({ session });
-      }
-    }
-
-    await order.save({ session });
-    await session.commitTransaction();
-
-    const populatedOrder = await Order.findById(order._id)
-      .populate('wholesaler', 'name email businessName')
-      .populate('approvedBy', 'name email');
-
-    // Send notification to wholesaler
-    await notifyOrderRejected(populatedOrder);
-
-    // Emit real-time event to wholesaler
-    emitToUser(populatedOrder.wholesaler._id, 'order_rejected', {
-      orderId: populatedOrder._id,
-      orderNumber: populatedOrder.orderNumber,
-      status: 'rejected',
-      reason: reason
-    });
-
-    sendSuccess(res, HTTP_STATUS.OK, {
-      order: populatedOrder
-    }, 'Order rejected successfully. Reserved stock released.');
-
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
+  if (!order) {
+    return next(new AppError('Order not found', HTTP_STATUS.NOT_FOUND));
   }
+
+  if (order.orderStatus !== ORDER_STATUS.PENDING) {
+    return next(new AppError('Only pending orders can be rejected', HTTP_STATUS.BAD_REQUEST));
+  }
+
+  // Reject order
+  order.reject(req.user.id, reason);
+
+  // Release reserved stock
+  for (const item of order.items) {
+    const inventory = await Inventory.findOne({ product: item.product });
+    
+    if (inventory) {
+      inventory.releaseStock(item.quantity);
+      inventory.updatedBy = req.user.id;
+      await inventory.save();
+    }
+  }
+
+  await order.save();
+
+  const populatedOrder = await Order.findById(order._id)
+    .populate('wholesaler', 'name email businessName')
+    .populate('approvedBy', 'name email');
+
+  // Send notification to wholesaler
+  await notifyOrderRejected(populatedOrder);
+
+  // Emit real-time event to wholesaler
+  emitToUser(populatedOrder.wholesaler._id, 'order_rejected', {
+    orderId: populatedOrder._id,
+    orderNumber: populatedOrder.orderNumber,
+    status: 'rejected',
+    reason: reason
+  });
+
+  sendSuccess(res, HTTP_STATUS.OK, {
+    order: populatedOrder
+  }, 'Order rejected successfully. Reserved stock released.');
 });
 
 /**
@@ -332,67 +286,52 @@ export const cancelOrder = asyncHandler(async (req, res, next) => {
     return next(new AppError('Please provide a cancellation reason', HTTP_STATUS.BAD_REQUEST));
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const order = await Order.findById(id);
 
-  try {
-    const order = await Order.findById(id).session(session);
-
-    if (!order) {
-      await session.abortTransaction();
-      return next(new AppError('Order not found', HTTP_STATUS.NOT_FOUND));
-    }
-
-    // Wholesalers can only cancel their own pending orders
-    if (req.user.role === USER_ROLES.WHOLESALER && order.wholesaler.toString() !== req.user.id) {
-      await session.abortTransaction();
-      return next(new AppError('You can only cancel your own orders', HTTP_STATUS.FORBIDDEN));
-    }
-
-    if (!order.canBeCancelled()) {
-      await session.abortTransaction();
-      return next(new AppError('This order cannot be cancelled', HTTP_STATUS.BAD_REQUEST));
-    }
-
-    // Cancel order
-    order.cancel(reason);
-
-    // Release reserved stock
-    for (const item of order.items) {
-      const inventory = await Inventory.findOne({ product: item.product }).session(session);
-      
-      if (inventory) {
-        // If order was approved, add back to available stock
-        if (order.orderStatus === ORDER_STATUS.APPROVED) {
-          inventory.addStock(item.quantity, `Order Cancelled: ${order.orderNumber}`);
-        } else {
-          // If pending, release reserved stock
-          inventory.releaseStock(item.quantity);
-        }
-        inventory.updatedBy = req.user.id;
-        await inventory.save({ session });
-      }
-    }
-
-    await order.save({ session });
-    await session.commitTransaction();
-
-    const populatedOrder = await Order.findById(order._id)
-      .populate('wholesaler', 'name email businessName');
-
-    // Send notification to wholesaler
-    await notifyOrderCancelled(populatedOrder);
-
-    sendSuccess(res, HTTP_STATUS.OK, {
-      order: populatedOrder
-    }, 'Order cancelled successfully. Stock restored.');
-
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
+  if (!order) {
+    return next(new AppError('Order not found', HTTP_STATUS.NOT_FOUND));
   }
+
+  // Wholesalers can only cancel their own pending orders
+  if (req.user.role === USER_ROLES.WHOLESALER && order.wholesaler.toString() !== req.user.id) {
+    return next(new AppError('You can only cancel your own orders', HTTP_STATUS.FORBIDDEN));
+  }
+
+  if (!order.canBeCancelled()) {
+    return next(new AppError('This order cannot be cancelled', HTTP_STATUS.BAD_REQUEST));
+  }
+
+  // Cancel order
+  order.cancel(reason);
+
+  // Release reserved stock
+  for (const item of order.items) {
+    const inventory = await Inventory.findOne({ product: item.product });
+    
+    if (inventory) {
+      // If order was approved, add back to available stock
+      if (order.orderStatus === ORDER_STATUS.APPROVED) {
+        inventory.addStock(item.quantity, `Order Cancelled: ${order.orderNumber}`);
+      } else {
+        // If pending, release reserved stock
+        inventory.releaseStock(item.quantity);
+      }
+      inventory.updatedBy = req.user.id;
+      await inventory.save();
+    }
+  }
+
+  await order.save();
+
+  const populatedOrder = await Order.findById(order._id)
+    .populate('wholesaler', 'name email businessName');
+
+  // Send notification to wholesaler
+  await notifyOrderCancelled(populatedOrder);
+
+  sendSuccess(res, HTTP_STATUS.OK, {
+    order: populatedOrder
+  }, 'Order cancelled successfully. Stock restored.');
 });
 
 /**
@@ -438,7 +377,7 @@ export const getAllOrders = asyncHandler(async (req, res, next) => {
     .skip(skip)
     .limit(limit);
 
-  sendPaginatedResponse(res, orders, page, limit, total, 'Orders retrieved successfully');
+  sendPaginatedResponse(res, { orders }, page, limit, total, 'Orders retrieved successfully');
 });
 
 /**
@@ -467,7 +406,7 @@ export const getMyOrders = asyncHandler(async (req, res, next) => {
     .skip(skip)
     .limit(limit);
 
-  sendPaginatedResponse(res, orders, page, limit, total, 'Order history retrieved successfully');
+  sendPaginatedResponse(res, { orders }, page, limit, total, 'Order history retrieved successfully');
 });
 
 /**
@@ -578,4 +517,50 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
   sendSuccess(res, HTTP_STATUS.OK, {
     stats: stats[0]
   }, 'Order statistics retrieved successfully');
+});
+
+/**
+ * @desc    Get monthly revenue data (Admin)
+ * @route   GET /api/orders/revenue/monthly
+ * @access  Private/Admin
+ */
+export const getMonthlyRevenue = asyncHandler(async (req, res, next) => {
+  const currentYear = new Date().getFullYear();
+  
+  const monthlyData = await Order.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: new Date(currentYear, 0, 1),
+          $lte: new Date(currentYear, 11, 31, 23, 59, 59)
+        },
+        orderStatus: { $in: [ORDER_STATUS.APPROVED, ORDER_STATUS.PROCESSING, ORDER_STATUS.SHIPPED, ORDER_STATUS.DELIVERED] }
+      }
+    },
+    {
+      $group: {
+        _id: { $month: '$createdAt' },
+        revenue: { $sum: '$totalAmount' },
+        orderCount: { $sum: 1 }
+      }
+    },
+    {
+      $sort: { _id: 1 }
+    }
+  ]);
+
+  // Fill in missing months with zero revenue
+  const monthlyRevenue = Array.from({ length: 12 }, (_, i) => {
+    const monthData = monthlyData.find(d => d._id === i + 1);
+    return {
+      month: i + 1,
+      revenue: monthData?.revenue || 0,
+      orderCount: monthData?.orderCount || 0
+    };
+  });
+
+  sendSuccess(res, HTTP_STATUS.OK, {
+    year: currentYear,
+    monthlyRevenue
+  }, 'Monthly revenue data retrieved successfully');
 });

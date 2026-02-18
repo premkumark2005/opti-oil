@@ -4,10 +4,20 @@
   justify-content: center;
   gap: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
   cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn:disabled {

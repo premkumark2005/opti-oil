@@ -8,10 +8,11 @@
   width: 100%;
   border-collapse: collapse;
   background-color: var(--bg-primary);
+  table-layout: fixed;
 }
 
 .table thead {
-  background-color: var(--bg-secondary);
+  background-color: var(--primary-color);
 }
 
 .table th {
@@ -19,7 +20,7 @@
   text-align: left;
   font-weight: 600;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -28,10 +29,22 @@
   padding: 12px 16px;
   border-top: 1px solid var(--border-color);
   font-size: 14px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody tr {
+  min-height: 70px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: var(--bg-secondary);
 }
 
 .table tbody tr:hover {
-  background-color: var(--bg-secondary);
+  background-color: #dbeafe;
 }
 
 .table-row-clickable {

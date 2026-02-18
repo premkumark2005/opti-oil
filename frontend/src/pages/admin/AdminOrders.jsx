@@ -335,7 +335,6 @@ const AdminOrders = () => {
             columns={columns}
             data={filteredOrders}
           />
-          />
         )}
       </Card>
 

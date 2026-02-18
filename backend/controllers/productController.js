@@ -2,7 +2,7 @@ import Product from '../models/Product.js';
 import Inventory from '../models/Inventory.js';
 import { asyncHandler, AppError } from '../middleware/errorHandler.js';
 import { sendSuccess, sendPaginatedResponse } from '../utils/response.js';
-import { HTTP_STATUS, DEFAULTS } from '../config/constants.js';
+import { HTTP_STATUS, DEFAULTS, PRODUCT_CATEGORIES } from '../config/constants.js';
 
 /**
  * @desc    Get all products with search, filter, and pagination
@@ -90,7 +90,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
 
   sendPaginatedResponse(
     res,
-    productsWithInventory,
+    { products: productsWithInventory },
     page,
     limit,
     total,
@@ -326,12 +326,18 @@ export const getProductsByCategory = asyncHandler(async (req, res, next) => {
  * @route   GET /api/products/categories/list
  * @access  Private
  */
+/**
+ * @desc    Get all product categories
+ * @route   GET /api/products/categories/list
+ * @access  Private
+ */
 export const getCategories = asyncHandler(async (req, res, next) => {
-  const categories = await Product.distinct('category', { isActive: true });
+  // Return predefined categories from constants
+  const categories = Object.values(PRODUCT_CATEGORIES);
 
   sendSuccess(res, HTTP_STATUS.OK, {
     count: categories.length,
-    categories: categories.sort()
+    categories: categories
   }, 'Categories retrieved successfully');
 });
 

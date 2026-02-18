@@ -19,10 +19,11 @@ const AdminProducts = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
+    sku: '',
     category: '',
     description: '',
     basePrice: '',
-    unit: 'Liter',
+    unit: 'L',
     brand: '',
     packagingSize: '',
     specifications: ''
@@ -85,10 +86,11 @@ const AdminProducts = () => {
   const resetForm = () => {
     setFormData({
       name: '',
+      sku: '',
       category: '',
       description: '',
       basePrice: '',
-      unit: 'Liter',
+      unit: 'L',
       brand: '',
       packagingSize: '',
       specifications: ''
@@ -130,6 +132,11 @@ const AdminProducts = () => {
     const submitData = new FormData();
     
     Object.keys(formData).forEach(key => {
+      // Skip specifications field (Map type is complex to handle)
+      if (key === 'specifications') {
+        return;
+      }
+      
       if (formData[key]) {
         submitData.append(key, formData[key]);
       }
@@ -149,8 +156,7 @@ const AdminProducts = () => {
   const handleEdit = (product) => {
     setEditingProduct(product);
     setFormData({
-      name: product.name,
-      category: product.category,
+      name: product.name,      sku: product.sku,      category: product.category,
       description: product.description || '',
       basePrice: product.basePrice,
       unit: product.unit,
@@ -172,18 +178,42 @@ const AdminProducts = () => {
   const columns = [
     {
       header: 'Image',
+      width: '80px',
       render: (row) => (
-        <img 
-          src={row.image ? `http://localhost:5000${row.image}` : '/placeholder-product.png'} 
-          alt={row.name}
-          style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
-          onError={(e) => { e.target.src = '/placeholder-product.png'; }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {row.image ? (
+            <img 
+              src={`http://localhost:5000${row.image}`} 
+              alt={row.name}
+              style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            style={{ 
+              display: row.image ? 'none' : 'flex',
+              width: '50px', 
+              height: '50px', 
+              backgroundColor: '#f0f0f0', 
+              borderRadius: '4px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: '#999'
+            }}
+          >
+            📦
+          </div>
+        </div>
       )
     },
     {
       header: 'Product Name',
       accessor: 'name',
+      width: '200px',
       render: (row) => (
         <div>
           <strong>{row.name}</strong>
@@ -194,29 +224,50 @@ const AdminProducts = () => {
     {
       header: 'Category',
       accessor: 'category',
+      width: '150px',
       render: (row) => <Badge variant="info">{row.category}</Badge>
     },
     {
       header: 'Brand',
-      accessor: 'brand'
+      accessor: 'brand',
+      width: '120px'
     },
     {
       header: 'Price',
       accessor: 'basePrice',
+      width: '120px',
       render: (row) => `$${row.basePrice?.toFixed(2)}/${row.unit}`
     },
     {
       header: 'Stock',
       accessor: 'inventory',
-      render: (row) => row.inStock ? (
-        <Badge variant="success">{row.inventory?.availableQuantity || 0} {row.unit}s</Badge>
-      ) : (
-        <Badge variant="danger">Out of Stock</Badge>
-      )
+      width: '150px',
+      render: (row) => {
+        // Check if inventory record exists
+        if (!row.inventory) {
+          return <Badge variant="secondary">No Inventory</Badge>;
+        }
+        
+        const quantity = row.inventory.availableQuantity || 0;
+        const reorderLevel = row.inventory.reorderLevel || 0;
+        
+        // Strict stock status rules
+        if (quantity === 0) {
+          // Out of stock
+          return <Badge variant="danger">Out of Stock</Badge>;
+        } else if (reorderLevel > 0 && quantity > 0 && quantity <= reorderLevel) {
+          // Low stock
+          return <Badge variant="warning">{quantity} {row.unit}s (Low)</Badge>;
+        } else {
+          // Normal stock
+          return <Badge variant="success">{quantity} {row.unit}s</Badge>;
+        }
+      }
     },
     {
       header: 'Status',
       accessor: 'isActive',
+      width: '100px',
       render: (row) => (
         <Badge variant={row.isActive ? 'success' : 'danger'}>
           {row.isActive ? 'Active' : 'Inactive'}
@@ -225,6 +276,7 @@ const AdminProducts = () => {
     },
     {
       header: 'Actions',
+      width: '180px',
       render: (row) => (
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button variant="primary" size="small" onClick={() => handleEdit(row)}>
@@ -340,6 +392,15 @@ const AdminProducts = () => {
           />
           
           <FormInput
+            label="SKU"
+            name="sku"
+            value={formData.sku}
+            onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
+            placeholder="e.g., SUN-001"
+            required
+          />
+          
+          <FormInput
             label="Brand"
             name="brand"
             value={formData.brand}
@@ -364,11 +425,13 @@ const AdminProducts = () => {
               value={formData.unit}
               onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
               options={[
-                { value: 'Liter', label: 'Liter' },
-                { value: 'Kilogram', label: 'Kilogram' },
-                { value: 'Gallon', label: 'Gallon' },
-                { value: 'Bottle', label: 'Bottle' },
-                { value: 'Can', label: 'Can' }
+                { value: 'L', label: 'Liter (L)' },
+                { value: 'mL', label: 'Milliliter (mL)' },
+                { value: 'kg', label: 'Kilogram (kg)' },
+                { value: 'g', label: 'Gram (g)' },
+                { value: 'pcs', label: 'Pieces (pcs)' },
+                { value: 'bottle', label: 'Bottle' },
+                { value: 'carton', label: 'Carton' }
               ]}
               required
             />
@@ -377,9 +440,12 @@ const AdminProducts = () => {
           <FormInput
             label="Packaging Size"
             name="packagingSize"
+            type="number"
+            step="0.01"
             value={formData.packagingSize}
             onChange={(e) => setFormData({ ...formData, packagingSize: e.target.value })}
-            placeholder="e.g., 5L, 20L"
+            placeholder="e.g., 5 (numeric value only)"
+            required
           />
           
           <FormInput
@@ -391,12 +457,12 @@ const AdminProducts = () => {
           />
           
           <FormInput
-            label="Specifications"
+            label="Specifications (Optional)"
             name="specifications"
             type="textarea"
             value={formData.specifications}
             onChange={(e) => setFormData({ ...formData, specifications: e.target.value })}
-            placeholder="Additional product specifications"
+            placeholder="Optional: Additional product specifications"
           />
           
           <div style={{ marginTop: '16px' }}>

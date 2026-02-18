@@ -13,6 +13,8 @@ export const inventoryService = {
   
   getLowStockProducts: () => api.get('/inventory/low-stock'),
   
+  getTopProductsByStock: (limit = 10) => api.get('/inventory/top-products', { params: { limit } }),
+  
   updateReorderLevel: (id, reorderLevel) => 
     api.put(`/inventory/${id}/reorder-level`, { reorderLevel }),
   

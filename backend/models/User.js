@@ -50,11 +50,8 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
     address: {
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String
+      type: String,
+      trim: true
     },
     businessName: {
       type: String,
@@ -73,8 +70,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster queries
-userSchema.index({ email: 1 });
+// Index for faster queries (email index is already created by unique: true)
 userSchema.index({ role: 1, status: 1 });
 
 /**

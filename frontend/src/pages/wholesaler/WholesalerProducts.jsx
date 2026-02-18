@@ -91,7 +91,7 @@ const WholesalerProducts = () => {
 
     const orderData = {
       items: cart.map(item => ({
-        product: item.product._id,
+        productId: item.product._id,
         quantity: item.quantity,
         unitPrice: item.product.basePrice
       })),
@@ -166,20 +166,39 @@ const WholesalerProducts = () => {
                   borderRadius: '8px',
                   overflow: 'hidden',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  height: '100%'
                 }}
               >
-                <img 
-                  src={product.image ? `http://localhost:5000${product.image}` : '/placeholder-product.png'} 
-                  alt={product.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    objectFit: 'cover',
-                    backgroundColor: '#f5f5f5'
-                  }}
-                  onError={(e) => { e.target.src = '/placeholder-product.png'; }}
-                />
+                <div style={{ 
+                  width: '100%', 
+                  height: '200px', 
+                  backgroundColor: '#f5f5f5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}>
+                  {product.image ? (
+                    <img 
+                      src={`http://localhost:5000${product.image}`} 
+                      alt={product.name}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                      onError={(e) => { 
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = '<div style="font-size: 48px;">📦</div>';
+                      }}
+                    />
+                  ) : (
+                    <div style={{ fontSize: '48px' }}>📦</div>
+                  )}
+                </div>
                 
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
                   <div>
@@ -210,24 +229,23 @@ const WholesalerProducts = () => {
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                </div>
-              </div>
-                    {product.inStock ? (
-                      <>
-                        <Badge variant="success">
-                          {product.inventory?.availableQuantity} {product.unit}s available
-                        </Badge>
-                        <Button
-                          variant="primary"
-                          size="small"
-                          onClick={() => addToCart(product)}
-                        >
-                          Add to Cart
-                        </Button>
-                      </>
-                    ) : (
-                      <Badge variant="danger">Out of Stock</Badge>
-                    )}
+                      {product.inStock ? (
+                        <>
+                          <Badge variant="success">
+                            {product.inventory?.availableQuantity} {product.unit}s available
+                          </Badge>
+                          <Button
+                            variant="primary"
+                            size="small"
+                            onClick={() => addToCart(product)}
+                          >
+                            Add to Cart
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant="danger">Out of Stock</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

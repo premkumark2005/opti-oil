@@ -36,7 +36,6 @@ const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
       type: String,
-      required: true,
       unique: true,
       uppercase: true
     },
@@ -124,8 +123,7 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for faster queries
-orderSchema.index({ orderNumber: 1 }, { unique: true });
+// Indexes for faster queries (orderNumber index is already created by unique: true)
 orderSchema.index({ wholesaler: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ createdAt: -1 });

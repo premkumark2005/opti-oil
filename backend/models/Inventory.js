@@ -58,8 +58,7 @@ const inventorySchema = new mongoose.Schema(
   }
 );
 
-// Indexes for faster queries
-inventorySchema.index({ product: 1 }, { unique: true });
+// Indexes for faster queries (product index is already created by unique: true)
 inventorySchema.index({ availableQuantity: 1 });
 inventorySchema.index({ reorderLevel: 1 });
 
@@ -69,8 +68,20 @@ inventorySchema.virtual('totalQuantity').get(function () {
 });
 
 // Virtual field to check if stock is low
+// Rule: quantity > 0 AND quantity <= reorderLevel AND reorderLevel > 0
 inventorySchema.virtual('isLowStock').get(function () {
-  return this.availableQuantity <= this.reorderLevel;
+  const quantity = Number(this.availableQuantity) || 0;
+  const reorder = Number(this.reorderLevel) || 0;
+  
+  // Low stock only if: quantity > 0 AND quantity <= reorderLevel AND reorderLevel > 0
+  return quantity > 0 && reorder > 0 && quantity <= reorder;
+});
+
+// Virtual field to check if out of stock
+// Rule: quantity === 0
+inventorySchema.virtual('isOutOfStock').get(function () {
+  const quantity = Number(this.availableQuantity) || 0;
+  return quantity === 0;
 });
 
 /**
@@ -139,10 +150,16 @@ inventorySchema.methods.confirmStockOut = function (quantity) {
  * @param {String} reference - Reference (e.g., purchase order number)
  */
 inventorySchema.methods.addStock = function (quantity, reference = 'Manual') {
-  this.availableQuantity += quantity;
+  // Validate quantity is numeric and positive
+  const validQuantity = Number(quantity);
+  if (isNaN(validQuantity) || validQuantity <= 0) {
+    throw new Error('Invalid quantity: must be a positive number');
+  }
+  
+  this.availableQuantity = Math.max(0, Number(this.availableQuantity) || 0) + validQuantity;
   this.lastStockIn = {
     date: new Date(),
-    quantity,
+    quantity: validQuantity,
     reference
   };
   this.lowStockAlertSent = false; // Reset alert flag
@@ -151,12 +168,21 @@ inventorySchema.methods.addStock = function (quantity, reference = 'Manual') {
 
 /**
  * Static method to get low stock products
+ * Rule: quantity > 0 AND quantity <= reorderLevel AND reorderLevel > 0
  */
 inventorySchema.statics.getLowStockProducts = async function () {
   return this.aggregate([
     {
       $match: {
-        $expr: { $lte: ['$availableQuantity', '$reorderLevel'] }
+        // Ensure reorderLevel exists and is greater than 0
+        reorderLevel: { $gt: 0 },
+        // Low stock: quantity > 0 AND quantity <= reorderLevel
+        $expr: {
+          $and: [
+            { $gt: ['$availableQuantity', 0] },
+            { $lte: ['$availableQuantity', '$reorderLevel'] }
+          ]
+        }
       }
     },
     {
@@ -171,13 +197,66 @@ inventorySchema.statics.getLowStockProducts = async function () {
       $unwind: '$productDetails'
     },
     {
+      $match: {
+        // Only include active products
+        'productDetails.isActive': true
+      }
+    },
+    {
       $project: {
-        product: 1,
         availableQuantity: 1,
         reorderLevel: 1,
-        'productDetails.name': 1,
-        'productDetails.sku': 1,
-        'productDetails.category': 1
+        product: {
+          _id: '$productDetails._id',
+          name: '$productDetails.name',
+          sku: '$productDetails.sku',
+          category: '$productDetails.category'
+        }
+      }
+    },
+    {
+      $sort: { availableQuantity: 1 }
+    }
+  ]);
+};
+
+/**
+ * Static method to get out of stock products
+ * Rule: quantity === 0
+ */
+inventorySchema.statics.getOutOfStockProducts = async function () {
+  return this.aggregate([
+    {
+      $match: {
+        availableQuantity: 0
+      }
+    },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'product',
+        foreignField: '_id',
+        as: 'productDetails'
+      }
+    },
+    {
+      $unwind: '$productDetails'
+    },
+    {
+      $match: {
+        'productDetails.isActive': true
+      }
+    },
+    {
+      $project: {
+        availableQuantity: 1,
+        reorderLevel: 1,
+        product: {
+          _id: '$productDetails._id',
+          name: '$productDetails.name',
+          sku: '$productDetails.sku',
+          category: '$productDetails.category'
+        }
       }
     }
   ]);

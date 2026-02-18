@@ -25,6 +25,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Initialize express app
 const app = express();
@@ -36,10 +37,11 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:']
+      imgSrc: ["'self'", 'data:', 'https:', 'http://localhost:5000', 'http://localhost:3000']
     }
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false // Disable this to allow cross-origin image loading
 }));
 
 // CORS configuration
@@ -94,8 +96,12 @@ const limiter = rateLimit({
 
 app.use('/api', limiter);
 
-// Serve static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files for uploads with CORS headers
+app.use('/uploads', (req, res, next) => {
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -117,6 +123,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler - must be after all routes
 app.use((req, res) => {

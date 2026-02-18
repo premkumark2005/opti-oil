@@ -9,7 +9,8 @@ import {
   getMyOrders,
   getOrder,
   getPendingOrders,
-  getOrderStats
+  getOrderStats,
+  getMonthlyRevenue
 } from '../controllers/orderController.js';
 import { protect, isAdmin, isWholesaler } from '../middleware/auth.js';
 import {
@@ -32,6 +33,7 @@ router.get('/my-orders', isWholesaler, getMyOrders);
 // Admin routes
 router.get('/pending', isAdmin, getPendingOrders);
 router.get('/stats', isAdmin, getOrderStats);
+router.get('/revenue/monthly', isAdmin, getMonthlyRevenue);
 router.get('/', isAdmin, getAllOrders);
 router.put('/:id/approve', isAdmin, validateOrderId, approveOrder);
 router.put('/:id/reject', isAdmin, validateRejectOrder, rejectOrder);

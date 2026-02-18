@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Generate invoice PDF for an order
@@ -57,7 +57,7 @@ export const generateInvoice = (order) => {
     `$${(item.quantity * item.unitPrice).toFixed(2)}`
   ]);
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: startY,
     head: [['Product', 'SKU', 'Quantity', 'Unit Price', 'Total']],
     body: tableData,
@@ -173,7 +173,7 @@ export const generatePackingSlip = (order) => {
     '☐' // Checkbox for picked
   ]);
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: 85,
     head: [['Product', 'SKU', 'Quantity', 'Unit', 'Picked']],
     body: tableData,
