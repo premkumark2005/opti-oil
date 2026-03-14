@@ -64,6 +64,8 @@ export const AuthProvider = ({ children }) => {
       // Redirect based on role
       if (userData.role === 'admin') {
         navigate('/admin/dashboard');
+      } else if (userData.role === 'supplier') {
+        navigate('/supplier/dashboard');
       } else {
         navigate('/wholesaler/dashboard');
       }
@@ -107,6 +109,17 @@ export const AuthProvider = ({ children }) => {
     toast.info('Logged out successfully');
   };
 
+  const setUserData = (userData, token) => {
+    // Store token
+    localStorage.setItem('token', token);
+    
+    // Set token in API headers
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    // Set user
+    setUser(userData);
+  };
+
   const updateProfile = async (formData) => {
     try {
       const response = await api.put('/auth/profile', formData);
@@ -128,9 +141,11 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    setUserData,
     updateProfile,
     isAdmin: user?.role === 'admin',
-    isWholesaler: user?.role === 'wholesaler'
+    isWholesaler: user?.role === 'wholesaler',
+    isSupplier: user?.role === 'supplier'
   };
 
   return (

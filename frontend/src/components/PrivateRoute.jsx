@@ -19,10 +19,13 @@ const PrivateRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Redirect to supplier login if trying to access supplier routes
+    const isSupplierRoute = window.location.pathname.startsWith('/supplier');
+    return <Navigate to={isSupplierRoute ? '/supplier/login' : '/login'} replace />;
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    // Unauthorized - redirect to appropriate dashboard
     return <Navigate to="/" replace />;
   }
 

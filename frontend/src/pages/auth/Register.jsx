@@ -154,6 +154,15 @@ const Register = () => {
               Login
             </Link>
           </p>
+          <p className="mt-3">
+            <Link to="/" className="auth-link">
+              ← Back to Home
+            </Link>
+            {' | '}
+            <Link to="/supplier/signup" className="auth-link">
+              Register as Supplier →
+            </Link>
+          </p>
         </div>
       </div>
     </div>

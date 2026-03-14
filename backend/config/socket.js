@@ -76,6 +76,20 @@ export const emitToWholesalers = (event, data) => {
   }
 };
 
+// Emit notification to all suppliers
+export const emitToSuppliers = (event, data) => {
+  if (io) {
+    io.to('supplier').emit(event, data);
+  }
+};
+
+// Emit raw material order notification to specific supplier
+export const emitRawMaterialOrderNotification = (supplierId, data) => {
+  if (io) {
+    io.to(`user_${supplierId}`).emit('raw_material_order', data);
+  }
+};
+
 // Emit notification to all users
 export const emitToAll = (event, data) => {
   if (io) {
@@ -89,5 +103,7 @@ export default {
   emitToUser,
   emitToAdmins,
   emitToWholesalers,
+  emitToSuppliers,
+  emitRawMaterialOrderNotification,
   emitToAll
 };

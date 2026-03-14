@@ -32,23 +32,68 @@ const AdminDashboard = () => {
     }
   });
 
+  // React Query configuration to prevent too many requests
+  const queryConfig = {
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
+    staleTime: 30000, // 30 seconds
+    onError: (error) => {
+      console.error('Dashboard query error:', error);
+    }
+  };
+
   // Fetch product stats
-  const { data: productStats } = useQuery('productStats', () => productService.getProductStats());
+  const { data: productStats, error: productStatsError } = useQuery(
+    'productStats', 
+    () => productService.getProductStats(), 
+    queryConfig
+  );
 
   // Fetch low stock products
-  const { data: lowStockData } = useQuery('lowStock', () => inventoryService.getLowStockProducts());
+  const { data: lowStockData, error: lowStockError } = useQuery(
+    'lowStock', 
+    () => inventoryService.getLowStockProducts(), 
+    queryConfig
+  );
 
   // Fetch top products by stock level for chart
-  const { data: topProductsData } = useQuery('topProducts', () => inventoryService.getTopProductsByStock(10));
+  const { data: topProductsData, error: topProductsError } = useQuery(
+    'topProducts', 
+    () => inventoryService.getTopProductsByStock(10), 
+    queryConfig
+  );
 
   // Fetch pending orders
-  const { data: pendingOrdersData } = useQuery('pendingOrders', () => orderService.getPendingOrders());
+  const { data: pendingOrdersData, error: pendingOrdersError } = useQuery(
+    'pendingOrders', 
+    () => orderService.getPendingOrders(), 
+    queryConfig
+  );
 
   // Fetch order stats
-  const { data: orderStats } = useQuery('orderStats', () => orderService.getOrderStats());
+  const { data: orderStats, error: orderStatsError } = useQuery(
+    'orderStats', 
+    () => orderService.getOrderStats(), 
+    queryConfig
+  );
 
   // Fetch monthly revenue data
-  const { data: monthlyRevenueData } = useQuery('monthlyRevenue', () => orderService.getMonthlyRevenue());
+  const { data: monthlyRevenueData, error: monthlyRevenueError } = useQuery(
+    'monthlyRevenue', 
+    () => orderService.getMonthlyRevenue(), 
+    queryConfig
+  );
+
+  // Log any errors
+  useEffect(() => {
+    if (productStatsError) console.error('Product stats error:', productStatsError);
+    if (lowStockError) console.error('Low stock error:', lowStockError);
+    if (topProductsError) console.error('Top products error:', topProductsError);
+    if (pendingOrdersError) console.error('Pending orders error:', pendingOrdersError);
+    if (orderStatsError) console.error('Order stats error:', orderStatsError);
+    if (monthlyRevenueError) console.error('Monthly revenue error:', monthlyRevenueError);
+  }, [productStatsError, lowStockError, topProductsError, pendingOrdersError, orderStatsError, monthlyRevenueError]);
 
   useEffect(() => {
     if (productStats?.data?.data?.stats?.overallStats?.[0]) {

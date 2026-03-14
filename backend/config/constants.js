@@ -1,7 +1,8 @@
 // User Roles
 export const USER_ROLES = {
   ADMIN: 'admin',
-  WHOLESALER: 'wholesaler'
+  WHOLESALER: 'wholesaler',
+  SUPPLIER: 'supplier'
 };
 
 // User Status
@@ -70,7 +71,78 @@ export const NOTIFICATION_TYPES = {
   ORDER_UPDATE: 'order-update',
   NEW_ORDER: 'new-order',
   ACCOUNT_APPROVED: 'account-approved',
-  ACCOUNT_REJECTED: 'account-rejected'
+  ACCOUNT_REJECTED: 'account-rejected',
+  RAW_MATERIAL_ORDER: 'raw-material-order',
+  RAW_MATERIAL_DELIVERED: 'raw-material-delivered'
+};
+
+// Raw Material Categories
+export const RAW_MATERIAL_CATEGORIES = {
+  SEEDS: 'Seeds',
+  NUTS: 'Nuts',
+  FRUITS: 'Fruits',
+  GRAINS: 'Grains',
+  PACKAGING: 'Packaging',
+  CHEMICALS: 'Chemicals',
+  OTHER: 'Other'
+};
+
+// Predefined Material Types (for inventory consolidation)
+export const MATERIAL_TYPES = {
+  // Seeds
+  GROUNDNUT: 'Groundnut',
+  SUNFLOWER_SEEDS: 'Sunflower Seeds',
+  SESAME_SEEDS: 'Sesame Seeds',
+  FLAX_SEEDS: 'Flax Seeds',
+  MUSTARD_SEEDS: 'Mustard Seeds',
+  COTTON_SEEDS: 'Cotton Seeds',
+  
+  // Nuts
+  ALMOND: 'Almond',
+  CASHEW: 'Cashew',
+  WALNUT: 'Walnut',
+  PISTACHIO: 'Pistachio',
+  
+  // Fruits
+  OLIVE: 'Olive',
+  COCONUT: 'Coconut',
+  PALM_FRUIT: 'Palm Fruit',
+  AVOCADO: 'Avocado',
+  
+  // Grains
+  CORN: 'Corn',
+  RICE_BRAN: 'Rice Bran',
+  WHEAT_GERM: 'Wheat Germ',
+  SOYBEAN: 'Soybean',
+  
+  // Packaging
+  PLASTIC_BOTTLES: 'Plastic Bottles',
+  GLASS_BOTTLES: 'Glass Bottles',
+  LABELS: 'Labels',
+  CAPS: 'Caps',
+  CARTONS: 'Cartons',
+  
+  // Chemicals
+  PRESERVATIVES: 'Preservatives',
+  ANTIOXIDANTS: 'Antioxidants',
+  FLAVORING: 'Flavoring',
+  
+  // Other
+  OTHER: 'Other'
+};
+
+// Raw Material Units
+export const RAW_MATERIAL_UNITS = {
+  KG: 'kg',
+  LITRE: 'litre'
+};
+
+// Raw Material Order Status
+export const RAW_MATERIAL_ORDER_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled'
 };
 
 // HTTP Status Codes

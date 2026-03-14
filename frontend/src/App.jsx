@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 // Auth Pages
+import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
@@ -11,7 +12,6 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminProducts from './pages/admin/AdminProducts';
-import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminWholesalers from './pages/admin/AdminWholesalers';
 import AdminReports from './pages/admin/AdminReports';
 import AdminNotifications from './pages/admin/AdminNotifications';
@@ -24,19 +24,51 @@ import WholesalerOrders from './pages/wholesaler/WholesalerOrders';
 import WholesalerNotifications from './pages/wholesaler/WholesalerNotifications';
 import WholesalerProfile from './pages/wholesaler/WholesalerProfile';
 
+// Supplier Pages
+import SupplierSignup from './pages/supplier/SupplierSignup';
+import SupplierLogin from './pages/supplier/SupplierLogin';
+import SupplierLayout from './pages/supplier/SupplierLayout';
+import SupplierDashboard from './pages/supplier/SupplierDashboard';
+import SupplierRawMaterials from './pages/supplier/SupplierRawMaterials';
+import SupplierOrders from './pages/supplier/SupplierOrders';
+import SupplierReports from './pages/supplier/SupplierReports';
+import SupplierProfile from './pages/supplier/SupplierProfile';
+import AdminSupplierManagement from './pages/admin/AdminSupplierManagement';
+import AdminRawMaterialOrdering from './pages/admin/AdminRawMaterialOrdering';
+import AdminRawMaterialInventory from './pages/admin/AdminRawMaterialInventory';
+import AdminRawMaterialOrders from './pages/admin/AdminRawMaterialOrders';
+import AdminRawMaterialReports from './pages/admin/AdminRawMaterialReports';
+
 // Components
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 import NotFound from './pages/NotFound';
+import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
   const { user } = useAuth();
 
   return (
+    <>
     <Routes>
+      {/* Home Page */}
+      <Route path="/" element={
+        user?.role === 'admin' 
+          ? <Navigate to="/admin/dashboard" replace /> 
+          : user?.role === 'wholesaler'
+          ? <Navigate to="/wholesaler/dashboard" replace />
+          : user?.role === 'supplier'
+          ? <Navigate to="/supplier/dashboard" replace />
+          : <Home />
+      } />
+
       {/* Public Routes */}
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+      
+      {/* Supplier Public Routes */}
+      <Route path="/supplier/signup" element={user ? <Navigate to="/" replace /> : <SupplierSignup />} />
+      <Route path="/supplier/login" element={user ? <Navigate to="/" replace /> : <SupplierLogin />} />
 
       {/* Protected Routes with Layout */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
@@ -58,10 +90,6 @@ function App() {
           element={<PrivateRoute allowedRoles={['admin']}><AdminProducts /></PrivateRoute>} 
         />
         <Route 
-          path="/admin/suppliers" 
-          element={<PrivateRoute allowedRoles={['admin']}><AdminSuppliers /></PrivateRoute>} 
-        />
-        <Route 
           path="/admin/wholesalers" 
           element={<PrivateRoute allowedRoles={['admin']}><AdminWholesalers /></PrivateRoute>} 
         />
@@ -76,6 +104,28 @@ function App() {
         <Route 
           path="/admin/profile" 
           element={<PrivateRoute allowedRoles={['admin']}><AdminProfile /></PrivateRoute>} 
+        />
+        
+        {/* Admin - Supplier Management Routes */}
+        <Route 
+          path="/admin/supplier-management" 
+          element={<PrivateRoute allowedRoles={['admin']}><AdminSupplierManagement /></PrivateRoute>} 
+        />
+        <Route 
+          path="/admin/raw-material-ordering" 
+          element={<PrivateRoute allowedRoles={['admin']}><AdminRawMaterialOrdering /></PrivateRoute>} 
+        />
+        <Route 
+          path="/admin/raw-material-inventory" 
+          element={<PrivateRoute allowedRoles={['admin']}><AdminRawMaterialInventory /></PrivateRoute>} 
+        />
+        <Route 
+          path="/admin/raw-material-orders" 
+          element={<PrivateRoute allowedRoles={['admin']}><AdminRawMaterialOrders /></PrivateRoute>} 
+        />
+        <Route 
+          path="/admin/raw-material-reports" 
+          element={<PrivateRoute allowedRoles={['admin']}><AdminRawMaterialReports /></PrivateRoute>} 
         />
 
         {/* Wholesaler Routes */}
@@ -99,21 +149,37 @@ function App() {
           path="/wholesaler/profile" 
           element={<PrivateRoute allowedRoles={['wholesaler']}><WholesalerProfile /></PrivateRoute>} 
         />
-
-        {/* Root redirect based on role */}
+      </Route>
+      
+      {/* Supplier Protected Routes with SupplierLayout */}
+      <Route element={<PrivateRoute><SupplierLayout /></PrivateRoute>}>
         <Route 
-          path="/" 
-          element={
-            user?.role === 'admin' 
-              ? <Navigate to="/admin/dashboard" replace /> 
-              : <Navigate to="/wholesaler/dashboard" replace />
-          } 
+          path="/supplier/dashboard" 
+          element={<PrivateRoute allowedRoles={['supplier']}><SupplierDashboard /></PrivateRoute>} 
+        />
+        <Route 
+          path="/supplier/raw-materials" 
+          element={<PrivateRoute allowedRoles={['supplier']}><SupplierRawMaterials /></PrivateRoute>} 
+        />
+        <Route 
+          path="/supplier/orders" 
+          element={<PrivateRoute allowedRoles={['supplier']}><SupplierOrders /></PrivateRoute>} 
+        />
+        <Route 
+          path="/supplier/reports" 
+          element={<PrivateRoute allowedRoles={['supplier']}><SupplierReports /></PrivateRoute>} 
+        />
+        <Route 
+          path="/supplier/profile" 
+          element={<PrivateRoute allowedRoles={['supplier']}><SupplierProfile /></PrivateRoute>} 
         />
       </Route>
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    {user && <ChatbotWidget />}
+    </>
   );
 }
 

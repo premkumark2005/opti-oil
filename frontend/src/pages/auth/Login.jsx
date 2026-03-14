@@ -90,6 +90,15 @@ const Login = () => {
               Register as Wholesaler
             </Link>
           </p>
+          <p className="mt-3">
+            <Link to="/" className="auth-link">
+              ← Back to Home
+            </Link>
+            {' | '}
+            <Link to="/supplier/login" className="auth-link">
+              Supplier Login →
+            </Link>
+          </p>
         </div>
       </div>
     </div>

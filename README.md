@@ -35,6 +35,39 @@ A complete **MERN stack** web application for managing edible oil inventory and 
 - **Profile Management**: Update business information
 - **Real-time Notifications**: Order approval/rejection alerts
 
+### 🌾 Supplier Features (NEW)
+- **Dashboard**: Revenue statistics and order analytics
+- **Raw Material Management**: Create and manage raw material catalog
+  - Categories: Seeds, Nuts, Fruits, Grains, Packaging, Chemicals
+  - Units: kg, litre
+  - Price and quantity tracking
+- **Order Management**: 
+  - View orders from admin
+  - Confirm orders
+  - Mark orders as delivered
+  - Order status tracking
+- **Registration & Approval**: 
+  - Self-registration with company details
+  - Pending approval workflow
+  - Admin approval required
+- **Profile Management**: Update company info and change password
+- **Real-time Notifications**: New order alerts
+
+### 🔧 Enhanced Admin Features (NEW)
+- **Supplier User Management**: 
+  - Approve/reject supplier registrations
+  - Activate/deactivate supplier accounts
+  - View supplier statistics
+- **Raw Material Ordering**: 
+  - Browse raw materials from all suppliers
+  - Place orders from suppliers
+  - View supplier information
+- **Raw Material Inventory**: 
+  - Stock in/out/adjust operations
+  - Transaction history and audit trail
+  - Low stock alerts with reorder levels
+  - Automatic inventory updates on delivery
+
 ### 🔐 Security Features
 - JWT authentication with secure token storage
 - Password hashing with bcrypt
@@ -184,9 +217,39 @@ opti-oil/
 ├── backend/
 │   ├── config/           # Configuration files (DB, constants, socket)
 │   ├── controllers/      # Route controllers
+│   │   ├── authController.js
+│   │   ├── productController.js
+│   │   ├── orderController.js
+│   │   ├── inventoryController.js
+│   │   ├── supplierAuthController.js      # NEW
+│   │   ├── adminSupplierUserController.js # NEW
+│   │   ├── rawMaterialController.js       # NEW
+│   │   ├── rawMaterialOrderController.js  # NEW
+│   │   └── rawMaterialInventoryController.js # NEW
 │   ├── middleware/       # Custom middleware (auth, error, upload)
 │   ├── models/          # Mongoose models
+│   │   ├── User.js
+│   │   ├── Product.js
+│   │   ├── Order.js
+│   │   ├── Inventory.js
+│   │   ├── RawMaterial.js                # NEW
+│   │   ├── RawMaterialOrder.js           # NEW
+│   │   ├── RawMaterialInventory.js       # NEW
+│   │   └── RawMaterialTransaction.js     # NEW
 │   ├── routes/          # Express routes
+│   │   ├── authRoutes.js
+│   │   ├── productRoutes.js
+│   │   ├── orderRoutes.js
+│   │   ├── inventoryRoutes.js
+│   │   ├── supplierAuthRoutes.js         # NEW
+│   │   ├── adminSupplierUserRoutes.js    # NEW
+│   │   ├── rawMaterialRoutes.js          # NEW
+│   │   ├── rawMaterialOrderRoutes.js     # NEW
+│   │   └── rawMaterialInventoryRoutes.js # NEW
+│   ├── validators/      # Input validation
+│   │   ├── supplierValidation.js         # NEW
+│   │   ├── rawMaterialValidation.js      # NEW
+│   │   └── rawMaterialOrderValidation.js # NEW
 │   ├── utils/           # Utility functions (notifications, response)
 │   ├── app.js           # Express app configuration
 │   ├── server.js        # Server entry point
@@ -195,19 +258,43 @@ opti-oil/
 │   ├── public/          # Static assets
 │   ├── src/
 │   │   ├── components/  # Reusable components
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── SupplierSidebar.jsx       # NEW
+│   │   │   └── PrivateRoute.jsx
+│   │   ├── constants/   # Constants and enums
+│   │   │   └── index.js                  # NEW
 │   │   ├── contexts/    # React contexts (AuthContext)
 │   │   ├── hooks/       # Custom hooks (useSocket)
 │   │   ├── pages/       # Page components
 │   │   │   ├── admin/   # Admin pages
-│   │   │   └── wholesaler/  # Wholesaler pages
+│   │   │   │   ├── AdminSupplierManagement.jsx      # NEW
+│   │   │   │   ├── AdminRawMaterialOrdering.jsx     # NEW
+│   │   │   │   └── AdminRawMaterialInventory.jsx    # NEW
+│   │   │   ├── wholesaler/  # Wholesaler pages
+│   │   │   └── supplier/    # Supplier pages (NEW)
+│   │   │       ├── SupplierSignup.jsx               # NEW
+│   │   │       ├── SupplierLogin.jsx                # NEW
+│   │   │       ├── SupplierLayout.jsx               # NEW
+│   │   │       ├── SupplierDashboard.jsx            # NEW
+│   │   │       ├── SupplierRawMaterials.jsx         # NEW
+│   │   │       ├── SupplierOrders.jsx               # NEW
+│   │   │       └── SupplierProfile.jsx              # NEW
 │   │   ├── services/    # API services
+│   │   │   ├── supplierAuthService.js    # NEW
+│   │   │   ├── rawMaterialService.js     # NEW
+│   │   │   ├── rawMaterialOrderService.js # NEW
+│   │   │   ├── rawMaterialInventoryService.js # NEW
+│   │   │   └── adminSupplierUserService.js # NEW
 │   │   ├── utils/       # Utility functions (exports, invoices)
 │   │   ├── App.jsx      # Main app component
 │   │   └── main.jsx     # Entry point
 │   └── package.json
 ├── .gitignore
 ├── LICENSE
-└── README.md
+├── README.md
+├── IMPLEMENTATION_COMPLETE.md    # NEW - Full feature documentation
+├── TESTING_GUIDE.md              # NEW - Complete testing workflow
+└── QUICK_START.md                # NEW - 5-minute quick start
 ```
 
 ## 🔑 Default Credentials

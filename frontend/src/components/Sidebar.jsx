@@ -11,9 +11,13 @@ const Sidebar = () => {
     { path: '/admin/inventory', label: 'Inventory', icon: '📦' },
     { path: '/admin/orders', label: 'Orders', icon: '🛒' },
     { path: '/admin/products', label: 'Products', icon: '🏷️' },
-    { path: '/admin/suppliers', label: 'Suppliers', icon: '🚚' },
     { path: '/admin/wholesalers', label: 'Wholesalers', icon: '👥' },
-    { path: '/admin/reports', label: 'Reports', icon: '📈' },
+    { path: '/admin/supplier-management', label: 'Supplier Users', icon: '👤' },
+    { path: '/admin/raw-material-ordering', label: 'Raw Materials', icon: '🌾' },
+    { path: '/admin/raw-material-orders', label: 'RM Orders', icon: '📋' },
+    { path: '/admin/raw-material-inventory', label: 'Raw Inventory', icon: '📊' },
+    { path: '/admin/raw-material-reports', label: 'RM Reports', icon: '📈' },
+    { path: '/admin/reports', label: 'Reports', icon: '📄' },
     { path: '/admin/notifications', label: 'Notifications', icon: '🔔' }
   ];
 
