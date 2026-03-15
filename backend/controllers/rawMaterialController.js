@@ -9,7 +9,7 @@ import { HTTP_STATUS, USER_ROLES } from '../config/constants.js';
  * @access  Private (Supplier)
  */
 export const createRawMaterial = asyncHandler(async (req, res, next) => {
-  const { materialType, supplierName, category, unit, pricePerUnit, availableQuantity, description, image } = req.body;
+  const { materialType, supplierName, category, unit, pricePerUnit, availableQuantity, description, image, gstRate } = req.body;
 
   // Create raw material with supplier ID from authenticated user
   const rawMaterial = await RawMaterial.create({
@@ -21,6 +21,7 @@ export const createRawMaterial = asyncHandler(async (req, res, next) => {
     availableQuantity,
     description,
     image,
+    gstRate,
     supplier: req.user._id
   });
 
@@ -127,7 +128,7 @@ export const updateRawMaterial = asyncHandler(async (req, res, next) => {
     return next(new AppError('Not authorized to update this raw material', HTTP_STATUS.FORBIDDEN));
   }
 
-  const { materialType, supplierName, category, unit, pricePerUnit, availableQuantity, description, status, image } = req.body;
+  const { materialType, supplierName, category, unit, pricePerUnit, availableQuantity, description, status, image, gstRate } = req.body;
 
   // Update fields
   if (materialType) rawMaterial.materialType = materialType;
@@ -139,6 +140,7 @@ export const updateRawMaterial = asyncHandler(async (req, res, next) => {
   if (description !== undefined) rawMaterial.description = description;
   if (status) rawMaterial.status = status;
   if (image !== undefined) rawMaterial.image = image;
+  if (gstRate !== undefined) rawMaterial.gstRate = gstRate;
 
   await rawMaterial.save();
   await rawMaterial.populate('supplier', 'name email businessName');

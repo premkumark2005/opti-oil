@@ -8,8 +8,11 @@ import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
 import FormInput from '../../components/FormInput';
 import { orderService } from '../../services/orderService';
+import { paymentService } from '../../services/paymentService';
+import { loadRazorpayScript } from '../../utils/razorpayUtils';
 import { generateInvoice } from '../../utils/invoiceUtils';
 import useSocket from '../../hooks/useSocket';
+import DemoPaymentModal from '../../components/DemoPaymentModal';
 
 const WholesalerOrders = () => {
   const queryClient = useQueryClient();
@@ -18,6 +21,7 @@ const WholesalerOrders = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancellationReason, setCancellationReason] = useState('');
+  const [demoPayment, setDemoPayment] = useState(null);
 
   // WebSocket real-time updates
   useSocket((event, data) => {
@@ -58,6 +62,66 @@ const WholesalerOrders = () => {
   const viewOrderDetails = (order) => {
     setSelectedOrder(order);
     setShowDetailsModal(true);
+  };
+
+  const handlePayment = async (order) => {
+    try {
+      // Step 1 — Ask backend to create/re-initiate a Razorpay order
+      const { data } = await paymentService.createOrderPayment(order._id);
+      const { razorpayOrderId, amount, currency } = data.data;
+
+      // ── DEMO MODE ──────────────────────────────────────────────────────
+      if (!razorpayOrderId || razorpayOrderId.startsWith('order_DEMO')) {
+        const idToUse = razorpayOrderId || `order_DEMO${Date.now()}`;
+        // Open the demo payment modal UI
+        setDemoPayment({
+          orderId: order._id,
+          razorpayOrderId: idToUse,
+          amount,
+          orderNumber: order.orderNumber
+        });
+        return;
+      }
+
+      // ── LIVE MODE ──────────────────────────────────────────────────────────
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error('Razorpay SDK failed to load. Are you online?');
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount,
+        currency: currency || 'INR',
+        name: 'Opti-Oil Wholesale',
+        description: `Payment for order ${order.orderNumber}`,
+        order_id: razorpayOrderId,
+        handler: async function (response) {
+          try {
+            await paymentService.verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: order._id
+            });
+            toast.success('🎉 Payment successful!');
+            queryClient.invalidateQueries('myOrders');
+          } catch (error) {
+            toast.error(error.response?.data?.message || 'Payment verification failed');
+          }
+        },
+        modal: {
+          ondismiss: () => toast.info('Payment cancelled.')
+        },
+        theme: { color: '#3498db' }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to initiate payment');
+    }
   };
 
   const columns = [
@@ -118,6 +182,11 @@ const WholesalerOrders = () => {
               setShowCancelModal(true);
             }}>
               Cancel
+            </Button>
+          )}
+          {row.paymentStatus === 'pending' && row.orderStatus !== 'cancelled' && row.orderStatus !== 'rejected' && (
+            <Button variant="primary" size="small" onClick={() => handlePayment(row)}>
+              Pay Now
             </Button>
           )}
           {(row.orderStatus !== 'pending' && row.orderStatus !== 'cancelled' && row.orderStatus !== 'rejected') && (
@@ -244,7 +313,8 @@ const WholesalerOrders = () => {
                   <div>
                     <strong>{item.product?.name || 'Product'}</strong>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Quantity: {item.quantity} × ${item.unitPrice?.toFixed(2)}
+                      Quantity: {item.quantity} × ${item.unitPrice?.toFixed(2)} <br/>
+                      GST: {item.gstRate || 0}% (${item.gstAmount?.toFixed(2) || '0.00'})
                     </div>
                   </div>
                   <div style={{ fontWeight: 'bold' }}>
@@ -252,6 +322,26 @@ const WholesalerOrders = () => {
                   </div>
                 </div>
               ))}
+              <div style={{
+                padding: '12px',
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                color: 'var(--text-secondary)'
+              }}>
+                <span>Subtotal (Excl. GST):</span>
+                <span>${selectedOrder.baseTotalAmount?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div style={{
+                padding: '12px',
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                color: 'var(--text-secondary)'
+              }}>
+                <span>Total GST:</span>
+                <span>${selectedOrder.totalGstAmount?.toFixed(2) || '0.00'}</span>
+              </div>
               <div style={{
                 padding: '12px',
                 backgroundColor: 'var(--bg-secondary)',
@@ -324,6 +414,31 @@ const WholesalerOrders = () => {
           required
         />
       </Modal>
+
+      {/* Demo Payment Modal */}
+      <DemoPaymentModal
+        isOpen={!!demoPayment}
+        onClose={() => setDemoPayment(null)}
+        onSuccess={async () => {
+          if (!demoPayment) return;
+          try {
+            await paymentService.verifyPayment({
+              razorpay_payment_id: `pay_DEMO${Date.now()}`,
+              razorpay_order_id: demoPayment.razorpayOrderId,
+              razorpay_signature: 'demo_signature',
+              orderId: demoPayment.orderId
+            });
+            toast.success('🎉 Payment successful!');
+            queryClient.invalidateQueries('myOrders');
+          } catch (err) {
+            toast.warning('Payment could not be recorded. Please try again.');
+          } finally {
+            setDemoPayment(null);
+          }
+        }}
+        amount={demoPayment?.amount}
+        orderNumber={demoPayment?.orderNumber}
+      />
     </div>
   );
 };

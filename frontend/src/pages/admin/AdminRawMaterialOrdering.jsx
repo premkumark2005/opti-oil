@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import rawMaterialService from '../../services/rawMaterialService';
 import rawMaterialOrderService from '../../services/rawMaterialOrderService';
+import { paymentService } from '../../services/paymentService';
 
 const RAW_MATERIAL_CATEGORIES = ['Seeds', 'Nuts', 'Fruits', 'Grains', 'Packaging', 'Chemicals', 'Other'];
 
@@ -12,6 +13,7 @@ const AdminRawMaterialOrdering = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [orderQuantity, setOrderQuantity] = useState('');
+  const [processingOrder, setProcessingOrder] = useState(false);
 
   useEffect(() => {
     fetchMaterials();
@@ -47,9 +49,7 @@ const AdminRawMaterialOrdering = () => {
     setOrderQuantity('');
   };
 
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-    
+  const handlePlaceOrder = async (payNow = false) => {
     if (!orderQuantity || parseFloat(orderQuantity) <= 0) {
       toast.error('Please enter a valid quantity');
       return;
@@ -61,15 +61,36 @@ const AdminRawMaterialOrdering = () => {
     }
 
     try {
-      await rawMaterialOrderService.create({
+      setProcessingOrder(true);
+      const payload = {
         rawMaterialId: selectedMaterial._id,
         quantityOrdered: parseFloat(orderQuantity)
-      });
-      toast.success('Order placed successfully');
+      };
+
+      // 1. Place the order
+      const response = await rawMaterialOrderService.create(payload);
+      const createdOrder = response.data?.order || response.data?.data?.order;
+      
+      // 2. Immediately pay if requested
+      if (payNow && createdOrder?._id) {
+        toast.info('Order placed! Initializing secure payout...');
+        try {
+          await paymentService.createSupplierPayout(createdOrder._id);
+          toast.success('🎉 Order Placed & Supplier Paid Successfully!');
+        } catch (payErr) {
+          toast.warning('Order placed, but instant payment failed. You can retry payment from the Raw Material Orders tab.');
+          console.error('Instant payout error:', payErr);
+        }
+      } else {
+        toast.success('Order placed successfully! Pending payment.');
+      }
+
       closeOrderModal();
       fetchMaterials();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Order placement failed');
+    } finally {
+      setProcessingOrder(false);
     }
   };
 
@@ -249,10 +270,14 @@ const AdminRawMaterialOrdering = () => {
                     <span className="text-gray-600">Supplier:</span>
                     <span className="font-semibold">{selectedMaterial.supplier?.businessName || 'N/A'}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">GST Rate:</span>
+                    <span className="font-semibold">{selectedMaterial.gstRate || 0}%</span>
+                  </div>
                 </div>
               </div>
 
-              <form onSubmit={handlePlaceOrder}>
+              <div>
                 <div className="mb-4">
                   <label className="block text-gray-700 mb-2">Order Quantity ({selectedMaterial.unit}) *</label>
                   <input
@@ -269,31 +294,58 @@ const AdminRawMaterialOrdering = () => {
 
                 {orderQuantity && (
                   <div className="bg-indigo-50 rounded-lg p-4 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Total Price:</span>
-                      <span className="text-xl font-bold text-indigo-600">
-                        ₹{(parseFloat(orderQuantity) * selectedMaterial.pricePerUnit).toLocaleString()}
+                    <div className="flex justify-between items-center text-sm text-gray-600 mb-1">
+                      <span>Subtotal:</span>
+                      <span>₹{(parseFloat(orderQuantity) * selectedMaterial.pricePerUnit).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-gray-600 mb-2 pb-2 border-b border-indigo-100">
+                      <span>GST ({(selectedMaterial.gstRate || 0)}%):</span>
+                      <span>₹{((parseFloat(orderQuantity) * selectedMaterial.pricePerUnit * (selectedMaterial.gstRate || 0)) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-lg">
+                      <span className="text-gray-900 font-bold">Total Price:</span>
+                      <span className="font-bold text-indigo-700">
+                        ₹{((parseFloat(orderQuantity) * selectedMaterial.pricePerUnit) * (1 + (selectedMaterial.gstRate || 0) / 100)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-4">
+                <div className="flex justify-end gap-3 pt-4">
                   <button
                     type="button"
                     onClick={closeOrderModal}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    disabled={processingOrder}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                   >
                     Cancel
                   </button>
                   <button
-                    type="submit"
-                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    type="button"
+                    onClick={() => handlePlaceOrder(false)}
+                    disabled={processingOrder}
+                    className="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 rounded-lg transition-colors font-medium border border-indigo-300 disabled:opacity-50"
                   >
-                    Place Order
+                    {processingOrder ? 'Working...' : 'Place Order Only'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePlaceOrder(true)}
+                    disabled={processingOrder}
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-semibold flex items-center gap-2 group disabled:bg-indigo-400 disabled:cursor-wait"
+                  >
+                    {processingOrder ? (
+                       <>
+                         <span className="animate-spin inline-block text-xl leading-none">↻</span> Processing...
+                       </>
+                    ) : (
+                      <>
+                        <span>💳</span> Place & Pay Now
+                      </>
+                    )}
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>

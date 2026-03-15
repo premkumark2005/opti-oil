@@ -39,12 +39,13 @@ export const createRawMaterialOrder = asyncHandler(async (req, res, next) => {
     supplier: rawMaterial.supplier._id,
     quantityOrdered,
     pricePerUnit: rawMaterial.pricePerUnit,
+    gstRate: rawMaterial.gstRate || 0,
     notes,
     placedBy: req.user._id
   });
 
   await order.populate([
-    { path: 'rawMaterial', select: 'materialType supplierName category unit' },
+    { path: 'rawMaterial', select: 'materialType supplierName category unit pricePerUnit gstRate' },
     { path: 'supplier', select: 'name email businessName phone' },
     { path: 'placedBy', select: 'name email businessName' }
   ]);
@@ -98,7 +99,7 @@ export const getAllRawMaterialOrders = asyncHandler(async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   const orders = await RawMaterialOrder.find(query)
-    .populate('rawMaterial', 'materialType supplierName category unit')
+    .populate('rawMaterial', 'materialType supplierName category unit pricePerUnit gstRate')
     .populate('supplier', 'name email businessName phone')
     .populate('placedBy', 'name email businessName')
     .sort({ createdAt: -1 })
@@ -124,7 +125,7 @@ export const getAllRawMaterialOrders = asyncHandler(async (req, res, next) => {
  */
 export const getRawMaterialOrderById = asyncHandler(async (req, res, next) => {
   const order = await RawMaterialOrder.findById(req.params.id)
-    .populate('rawMaterial', 'materialType supplierName category unit description')
+    .populate('rawMaterial', 'materialType supplierName category unit description pricePerUnit gstRate')
     .populate('supplier', 'name email businessName phone address')
     .populate('placedBy', 'name email businessName');
 
@@ -313,7 +314,9 @@ export const getSupplierOrderStats = asyncHandler(async (req, res, next) => {
     {
       $group: {
         _id: null,
-        totalRevenue: { $sum: '$totalPrice' }
+        totalRevenue: { $sum: '$totalPrice' },
+        totalBaseAmount: { $sum: '$baseTotalAmount' },
+        totalGstAmount: { $sum: '$gstAmount' }
       }
     }
   ]);
@@ -326,7 +329,9 @@ export const getSupplierOrderStats = asyncHandler(async (req, res, next) => {
       pending: pendingOrders,
       confirmed: confirmedOrders,
       delivered: deliveredOrders,
-      totalRevenue
+      totalRevenue,
+      totalBaseAmount: revenueData.length > 0 ? revenueData[0].totalBaseAmount : 0,
+      totalGstAmount: revenueData.length > 0 ? revenueData[0].totalGstAmount : 0
     }
   });
 });
@@ -355,7 +360,9 @@ export const getAdminOrderStats = asyncHandler(async (req, res, next) => {
     {
       $group: {
         _id: null,
-        totalSpent: { $sum: '$totalPrice' }
+        totalSpent: { $sum: '$totalPrice' },
+        totalBaseAmount: { $sum: '$baseTotalAmount' },
+        totalGstAmount: { $sum: '$gstAmount' }
       }
     }
   ]);
@@ -367,7 +374,9 @@ export const getAdminOrderStats = asyncHandler(async (req, res, next) => {
       total: totalOrders,
       pending: pendingOrders,
       delivered: deliveredOrders,
-      totalSpent
+      totalSpent,
+      totalBaseAmount: spentData.length > 0 ? spentData[0].totalBaseAmount : 0,
+      totalGstAmount: spentData.length > 0 ? spentData[0].totalGstAmount : 0
     }
   });
 });

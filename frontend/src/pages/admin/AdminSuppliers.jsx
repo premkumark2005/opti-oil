@@ -20,7 +20,10 @@ const AdminSuppliers = () => {
     phone: '',
     address: '',
     taxId: '',
-    paymentTerms: ''
+    paymentTerms: '',
+    bankAccountNumber: '',
+    bankIFSC: '',
+    accountHolderName: ''
   });
 
   const { data: suppliersData, isLoading } = useQuery('suppliers', () =>
@@ -78,7 +81,10 @@ const AdminSuppliers = () => {
       phone: '',
       address: '',
       taxId: '',
-      paymentTerms: ''
+      paymentTerms: '',
+      bankAccountNumber: '',
+      bankIFSC: '',
+      accountHolderName: ''
     });
     setEditingSupplier(null);
   };
@@ -102,7 +108,10 @@ const AdminSuppliers = () => {
       phone: supplier.phone || '',
       address: supplier.address || '',
       taxId: supplier.taxId || '',
-      paymentTerms: supplier.paymentTerms || ''
+      paymentTerms: supplier.paymentTerms || '',
+      bankAccountNumber: supplier.bankAccountNumber || '',
+      bankIFSC: supplier.bankIFSC || '',
+      accountHolderName: supplier.accountHolderName || ''
     });
     setShowModal(true);
   };
@@ -263,6 +272,26 @@ const AdminSuppliers = () => {
             type="textarea"
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          />
+
+          <h3 style={{ margin: '16px 0 8px 0', fontSize: '16px' }}>Bank Details</h3>
+          <FormInput
+            label="Account Holder Name"
+            name="accountHolderName"
+            value={formData.accountHolderName}
+            onChange={(e) => setFormData({ ...formData, accountHolderName: e.target.value })}
+          />
+          <FormInput
+            label="Bank Account Number"
+            name="bankAccountNumber"
+            value={formData.bankAccountNumber}
+            onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+          />
+          <FormInput
+            label="Bank IFSC"
+            name="bankIFSC"
+            value={formData.bankIFSC}
+            onChange={(e) => setFormData({ ...formData, bankIFSC: e.target.value })}
           />
         </form>
       </Modal>

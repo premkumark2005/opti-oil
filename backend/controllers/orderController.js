@@ -14,6 +14,7 @@ import {
   getAdminUserIds
 } from '../utils/notifications.js';
 import { emitToUser, emitToAdmins } from '../config/socket.js';
+import { paymentService } from '../services/paymentService.js';
 
 /**
  * @desc    Place a new order (Wholesaler)
@@ -61,17 +62,21 @@ export const placeOrder = asyncHandler(async (req, res, next) => {
     await inventory.save();
 
     // Prepare order item
+    const subtotal = item.quantity * product.basePrice;
+    const gstAmount = (subtotal * (product.gstRate || 0)) / 100;
+    
     const orderItem = {
       product: product._id,
       productName: product.name,
       sku: product.sku,
       quantity: item.quantity,
       unitPrice: product.basePrice,
-      subtotal: item.quantity * product.basePrice
+      gstRate: product.gstRate || 0,
+      subtotal: subtotal
     };
 
     orderItems.push(orderItem);
-    totalAmount += orderItem.subtotal;
+    totalAmount += (subtotal + gstAmount);
   }
 
   // Create order
@@ -86,7 +91,7 @@ export const placeOrder = asyncHandler(async (req, res, next) => {
 
   const populatedOrder = await Order.findById(order._id)
     .populate('wholesaler', 'name email businessName')
-    .populate('items.product', 'name category unit');
+    .populate('items.product', 'name category unit basePrice gstRate');
 
   // Send notification to admins about new order
   const adminIds = await getAdminUserIds();
@@ -103,9 +108,21 @@ export const placeOrder = asyncHandler(async (req, res, next) => {
     itemsCount: populatedOrder.items.length
   });
 
+  // Create Razorpay order
+  let razorpayOrder = null;
+  try {
+    razorpayOrder = await paymentService.createOrder(totalAmount, order._id);
+  } catch (error) {
+    console.error('Failed to create Razorpay Order:', error);
+    // Continue anyway; they can re-initiate payment later
+  }
+
   sendSuccess(res, HTTP_STATUS.CREATED, {
-    order: populatedOrder
-  }, 'Order placed successfully. Awaiting admin approval.');
+    order: populatedOrder,
+    razorpayOrderId: razorpayOrder ? razorpayOrder.id : null,
+    amount: razorpayOrder ? razorpayOrder.amount : null,
+    currency: razorpayOrder ? razorpayOrder.currency : null
+  }, 'Order placed successfully. Awaiting payment/admin approval.');
 });
 
 /**
@@ -147,7 +164,7 @@ export const approveOrder = asyncHandler(async (req, res, next) => {
 
   const populatedOrder = await Order.findById(order._id)
     .populate('wholesaler', 'name email businessName')
-    .populate('items.product', 'name category')
+    .populate('items.product', 'name category basePrice gstRate')
     .populate('approvedBy', 'name email');
 
   // Send notification to wholesaler
@@ -259,7 +276,7 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
 
     const populatedOrder = await Order.findById(order._id)
       .populate('wholesaler', 'name email businessName')
-      .populate('items.product', 'name category');
+      .populate('items.product', 'name category basePrice gstRate');
 
     // Send notification to wholesaler
     await notifyOrderStatusUpdate(populatedOrder, status);
@@ -478,6 +495,8 @@ export const getOrderStats = asyncHandler(async (req, res, next) => {
               _id: null,
               totalOrders: { $sum: 1 },
               totalRevenue: { $sum: '$totalAmount' },
+              totalBaseAmount: { $sum: '$baseTotalAmount' },
+              totalGstAmount: { $sum: '$totalGstAmount' },
               averageOrderValue: { $avg: '$totalAmount' }
             }
           }
@@ -541,6 +560,8 @@ export const getMonthlyRevenue = asyncHandler(async (req, res, next) => {
       $group: {
         _id: { $month: '$createdAt' },
         revenue: { $sum: '$totalAmount' },
+        baseAmount: { $sum: '$baseTotalAmount' },
+        gstAmount: { $sum: '$totalGstAmount' },
         orderCount: { $sum: 1 }
       }
     },
@@ -555,6 +576,8 @@ export const getMonthlyRevenue = asyncHandler(async (req, res, next) => {
     return {
       month: i + 1,
       revenue: monthData?.revenue || 0,
+      baseAmount: monthData?.baseAmount || 0,
+      gstAmount: monthData?.gstAmount || 0,
       orderCount: monthData?.orderCount || 0
     };
   });

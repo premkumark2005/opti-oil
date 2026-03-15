@@ -53,7 +53,7 @@ export const addSupplier = asyncHandler(async (req, res, next) => {
 
   sendSuccess(res, HTTP_STATUS.CREATED, {
     supplier: await Supplier.findById(supplier._id)
-      .populate('suppliedProducts', 'name sku category')
+      .populate('suppliedProducts', 'name sku category basePrice gstRate')
       .populate('createdBy', 'name email')
   }, 'Supplier added successfully');
 });
@@ -108,7 +108,7 @@ export const updateSupplier = asyncHandler(async (req, res, next) => {
 
   sendSuccess(res, HTTP_STATUS.OK, {
     supplier: await Supplier.findById(supplier._id)
-      .populate('suppliedProducts', 'name sku category')
+      .populate('suppliedProducts', 'name sku category basePrice gstRate')
       .populate('createdBy', 'name email')
   }, 'Supplier updated successfully');
 });
@@ -143,7 +143,7 @@ export const getAllSuppliers = asyncHandler(async (req, res, next) => {
   const total = await Supplier.countDocuments(filter);
 
   const suppliers = await Supplier.find(filter)
-    .populate('suppliedProducts', 'name sku category')
+    .populate('suppliedProducts', 'name sku category basePrice gstRate')
     .populate('createdBy', 'name email')
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -161,7 +161,7 @@ export const getSupplier = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
   const supplier = await Supplier.findById(id)
-    .populate('suppliedProducts', 'name sku category basePrice')
+    .populate('suppliedProducts', 'name sku category basePrice gstRate')
     .populate('createdBy', 'name email');
 
   if (!supplier) {

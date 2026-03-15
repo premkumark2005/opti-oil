@@ -9,7 +9,10 @@ const SupplierProfile = () => {
     email: '',
     phone: '',
     companyName: '',
-    address: ''
+    address: '',
+    accountHolderName: '',
+    bankAccountNumber: '',
+    bankIFSC: ''
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -30,7 +33,10 @@ const SupplierProfile = () => {
         email: user.email || '',
         phone: user.phone || '',
         companyName: user.businessName || '',
-        address: user.address || ''
+        address: user.address || '',
+        accountHolderName: user.accountHolderName || '',
+        bankAccountNumber: user.bankAccountNumber || '',
+        bankIFSC: user.bankIFSC || ''
       });
     } catch (error) {
       toast.error('Failed to fetch profile');
@@ -165,6 +171,46 @@ const SupplierProfile = () => {
                 required
               />
             </div>
+            
+            <h3 className="text-lg font-bold text-gray-800 mb-4 pt-4 border-t border-gray-200">Bank Details (For Payouts)</h3>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Account Holder Name *</label>
+              <input
+                type="text"
+                name="accountHolderName"
+                value={profileData.accountHolderName}
+                onChange={handleProfileChange}
+                placeholder="Name as registered with Bank"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">Bank Account Number *</label>
+              <input
+                type="text"
+                name="bankAccountNumber"
+                value={profileData.bankAccountNumber}
+                onChange={handleProfileChange}
+                placeholder="e.g. 1234567890"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Bank IFSC Code *</label>
+              <input
+                type="text"
+                name="bankIFSC"
+                value={profileData.bankIFSC}
+                onChange={handleProfileChange}
+                placeholder="e.g. HDFC0000123"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 pattern-uppercase"
+                style={{ textTransform: 'uppercase' }}
+                required
+              />
+            </div>
+
             <button
               type="submit"
               className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors"

@@ -62,6 +62,18 @@ const supplierSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Created by is required']
     },
+    bankAccountNumber: {
+      type: String,
+      trim: true
+    },
+    bankIFSC: {
+      type: String,
+      trim: true
+    },
+    accountHolderName: {
+      type: String,
+      trim: true
+    },
     notes: {
       type: String,
       trim: true,

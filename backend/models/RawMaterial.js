@@ -36,6 +36,12 @@ const rawMaterialSchema = new mongoose.Schema(
       required: [true, 'Price per unit is required'],
       min: [0, 'Price cannot be negative']
     },
+    gstRate: {
+      type: Number,
+      min: [0, 'GST rate cannot be negative'],
+      max: [28, 'GST rate cannot exceed 28%'],
+      default: 0
+    },
     availableQuantity: {
       type: Number,
       required: [true, 'Available quantity is required'],

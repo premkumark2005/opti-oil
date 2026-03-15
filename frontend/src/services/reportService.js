@@ -7,5 +7,7 @@ export const reportService = {
   
   getOrderSummaryReport: (params) => api.get('/reports/order-summary', { params }),
   
-  getProductPerformanceReport: () => api.get('/reports/product-performance')
+  getProductPerformanceReport: () => api.get('/reports/product-performance'),
+
+  getPaymentReport: () => api.get('/reports/payments')
 };

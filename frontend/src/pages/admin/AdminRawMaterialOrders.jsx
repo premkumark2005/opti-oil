@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import rawMaterialOrderService from '../../services/rawMaterialOrderService';
+import { paymentService } from '../../services/paymentService';
 
 const ORDER_STATUS = ['pending', 'confirmed', 'delivered', 'cancelled'];
 
@@ -15,6 +16,7 @@ const AdminRawMaterialOrders = () => {
     supplier: ''
   });
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
@@ -24,6 +26,7 @@ const AdminRawMaterialOrders = () => {
     cancelled: 0,
     totalAmount: 0
   });
+  const [processingPayout, setProcessingPayout] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -101,6 +104,21 @@ const AdminRawMaterialOrders = () => {
     a.click();
     window.URL.revokeObjectURL(url);
     toast.success('Orders exported to CSV');
+  };
+
+  const handlePayout = async (orderId) => {
+    try {
+      setProcessingPayout(true);
+      await paymentService.createSupplierPayout(orderId);
+      toast.success('Payout to supplier successful!');
+      fetchOrders();
+      setShowPayoutModal(false);
+      setShowDetailsModal(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Payout failed');
+    } finally {
+      setProcessingPayout(false);
+    }
   };
 
   const resetFilters = () => {
@@ -290,6 +308,9 @@ const AdminRawMaterialOrders = () => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -340,6 +361,11 @@ const AdminRawMaterialOrders = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(order.status)}`}>
                         {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${order.supplierPaymentStatus === 'Paid' ? 'bg-green-100 text-green-800' : order.supplierPaymentStatus === 'Failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {order.supplierPaymentStatus || 'Pending'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -488,8 +514,12 @@ const AdminRawMaterialOrders = () => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="space-y-2">
                     <div className="flex justify-between text-gray-700">
-                      <span>Subtotal:</span>
-                      <span>₹{selectedOrder.totalPrice?.toFixed(2) || '0.00'}</span>
+                      <span>Subtotal (Excl. GST):</span>
+                      <span>₹{selectedOrder.baseTotalAmount?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-700">
+                      <span>Total GST:</span>
+                      <span>₹{selectedOrder.gstAmount?.toFixed(2) || '0.00'}</span>
                     </div>
                     <div className="border-t border-gray-300 pt-2 flex justify-between font-bold text-gray-900 text-lg">
                       <span>Total Amount:</span>
@@ -554,13 +584,83 @@ const AdminRawMaterialOrders = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end">
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between">
+              {(selectedOrder.supplierPaymentStatus !== 'Paid' && selectedOrder.status !== 'cancelled') ? (
+                <button
+                  onClick={() => setShowPayoutModal(true)}
+                  disabled={processingPayout}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                >
+                  {processingPayout ? 'Processing...' : 'Pay Supplier'}
+                </button>
+              ) : <div></div>}
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Payout Confirmation Modal */}
+      {showPayoutModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-blue-50 rounded-t-lg">
+              <h3 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+                <span className="text-2xl">🏦</span> Confirm Bank Transfer
+              </h3>
+              <button
+                onClick={() => setShowPayoutModal(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-4 text-center">
+                You are about to initiate an IMPS bank transfer from your RazorpayX ledger directly to the supplier's registered bank account.
+              </p>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-500">Supplier:</span>
+                  <span className="font-semibold text-gray-900">{selectedOrder.supplier?.businessName || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-500">Order Ref:</span>
+                  <span className="font-medium text-gray-900">{selectedOrder.orderNumber}</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                  <span className="text-gray-700 font-medium">Transfer Amount:</span>
+                  <span className="font-bold text-blue-700 text-lg">₹{(selectedOrder.totalPrice || 0).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowPayoutModal(false)}
+                  disabled={processingPayout}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium border border-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handlePayout(selectedOrder._id)}
+                  disabled={processingPayout}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold flex items-center gap-2 relative overflow-hidden disabled:bg-blue-400"
+                >
+                  {processingPayout ? (
+                    <>
+                      <span className="animate-spin text-xl leading-none">↻</span> Processing...
+                    </>
+                  ) : (
+                    'Confirm Payment'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

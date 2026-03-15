@@ -27,6 +27,20 @@ const rawMaterialOrderSchema = new mongoose.Schema(
       required: [true, 'Price per unit is required'],
       min: [0, 'Price cannot be negative']
     },
+    gstRate: {
+      type: Number,
+      min: [0, 'GST rate cannot be negative'],
+      max: [28, 'GST rate cannot exceed 28%'],
+      default: 0
+    },
+    gstAmount: {
+      type: Number,
+      default: 0
+    },
+    baseTotalAmount: {
+      type: Number,
+      default: 0
+    },
     totalPrice: {
       type: Number
     },
@@ -38,6 +52,13 @@ const rawMaterialOrderSchema = new mongoose.Schema(
       },
       default: RAW_MATERIAL_ORDER_STATUS.PENDING
     },
+    supplierPaymentStatus: {
+      type: String,
+      enum: ['Pending', 'Paid', 'Failed'],
+      default: 'Pending'
+    },
+    supplierPaymentId: { type: String },
+    supplierPaymentDate: { type: Date },
     orderDate: {
       type: Date,
       default: Date.now
@@ -73,8 +94,10 @@ rawMaterialOrderSchema.pre('save', async function (next) {
     this.orderNumber = `RMO-${Date.now()}-${count + 1}`;
   }
   
-  // Calculate total price
-  this.totalPrice = this.quantityOrdered * this.pricePerUnit;
+  // Calculate base price, GST, and total price
+  this.baseTotalAmount = this.quantityOrdered * this.pricePerUnit;
+  this.gstAmount = (this.baseTotalAmount * (this.gstRate || 0)) / 100;
+  this.totalPrice = this.baseTotalAmount + this.gstAmount;
   
   next();
 });

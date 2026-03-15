@@ -61,6 +61,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    bankAccountNumber: {
+      type: String,
+      trim: true
+    },
+    bankIFSC: {
+      type: String,
+      trim: true
+    },
+    accountHolderName: {
+      type: String,
+      trim: true
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     lastLogin: Date

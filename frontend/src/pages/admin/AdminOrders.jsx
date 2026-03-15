@@ -369,7 +369,8 @@ const AdminOrders = () => {
                   <div>
                     <strong>{item.product?.name || 'Product'}</strong>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Quantity: {item.quantity} × ${item.unitPrice?.toFixed(2)}
+                      Quantity: {item.quantity} × ${item.unitPrice?.toFixed(2)} <br/>
+                      GST: {item.gstRate || 0}% (${item.gstAmount?.toFixed(2) || '0.00'})
                     </div>
                   </div>
                   <div style={{ fontWeight: 'bold' }}>
@@ -377,6 +378,26 @@ const AdminOrders = () => {
                   </div>
                 </div>
               ))}
+              <div style={{ 
+                padding: '12px', 
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                color: 'var(--text-secondary)'
+              }}>
+                <span>Subtotal (Excl. GST):</span>
+                <span>${selectedOrder.baseTotalAmount?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div style={{ 
+                padding: '12px', 
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                color: 'var(--text-secondary)'
+              }}>
+                <span>Total GST:</span>
+                <span>${selectedOrder.totalGstAmount?.toFixed(2) || '0.00'}</span>
+              </div>
               <div style={{ 
                 padding: '12px', 
                 backgroundColor: 'var(--bg-secondary)',

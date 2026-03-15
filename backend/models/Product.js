@@ -30,6 +30,12 @@ const productSchema = new mongoose.Schema(
       required: [true, 'Base price is required'],
       min: [0, 'Base price cannot be negative']
     },
+    gstRate: {
+      type: Number,
+      min: [0, 'GST rate cannot be negative'],
+      max: [28, 'GST rate cannot exceed 28%'],
+      default: 0
+    },
     sku: {
       type: String,
       required: [true, 'SKU is required'],

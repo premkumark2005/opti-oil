@@ -3,7 +3,8 @@ import {
   getInventoryStatusReport,
   getLowStockReport,
   getOrderSummaryReport,
-  getProductPerformanceReport
+  getProductPerformanceReport,
+  getPaymentReport
 } from '../controllers/reportController.js';
 import { protect, isAdmin } from '../middleware/auth.js';
 
@@ -28,5 +29,10 @@ router.get('/order-summary', getOrderSummaryReport);
  * Product Reports
  */
 router.get('/product-performance', getProductPerformanceReport);
+
+/**
+ * Payment Reports
+ */
+router.get('/payments', getPaymentReport);
 
 export default router;

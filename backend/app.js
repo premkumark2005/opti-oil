@@ -33,6 +33,7 @@ import rawMaterialRoutes from './routes/rawMaterialRoutes.js';
 import rawMaterialOrderRoutes from './routes/rawMaterialOrderRoutes.js';
 import rawMaterialInventoryRoutes from './routes/rawMaterialInventoryRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 // Initialize express app
 const app = express();
@@ -138,6 +139,7 @@ app.use('/api/raw-materials', rawMaterialRoutes);
 app.use('/api/raw-material-orders', rawMaterialOrderRoutes);
 app.use('/api/raw-material-inventory', rawMaterialInventoryRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // 404 handler - must be after all routes
 app.use((req, res) => {

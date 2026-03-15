@@ -118,6 +118,7 @@ export const exportProductsToExcel = (productsData) => {
     'Category': product.category,
     'Brand': product.brand || 'N/A',
     'Base Price': product.basePrice,
+    'GST Rate (%)': product.gstRate || 0,
     'Unit': product.unit,
     'Packaging Size': product.packagingSize,
     'Active': product.isActive ? 'Yes' : 'No',

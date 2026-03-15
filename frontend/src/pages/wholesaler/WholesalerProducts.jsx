@@ -8,6 +8,9 @@ import Modal from '../../components/Modal';
 import FormInput from '../../components/FormInput';
 import { productService } from '../../services/productService';
 import { orderService } from '../../services/orderService';
+import { paymentService } from '../../services/paymentService';
+import { loadRazorpayScript } from '../../utils/razorpayUtils';
+import DemoPaymentModal from '../../components/DemoPaymentModal';
 
 const WholesalerProducts = () => {
   const queryClient = useQueryClient();
@@ -16,6 +19,7 @@ const WholesalerProducts = () => {
   const [cart, setCart] = useState([]);
   const [showCartModal, setShowCartModal] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
+  const [demoPayment, setDemoPayment] = useState(null); // { orderId, razorpayOrderId, amount, orderNumber }
 
   const { data: productsData, isLoading } = useQuery(
     ['products', searchTerm, categoryFilter],
@@ -32,12 +36,73 @@ const WholesalerProducts = () => {
   const placeOrderMutation = useMutation(
     (orderData) => orderService.placeOrder(orderData),
     {
-      onSuccess: () => {
-        queryClient.invalidateQueries('myOrders');
-        toast.success('Order placed successfully! Waiting for admin approval.');
+      onSuccess: async (response) => {
+        const { order, razorpayOrderId, amount, currency } = response.data?.data || {};
+
+        // Close cart immediately
         setCart([]);
         setShowCartModal(false);
         setShippingAddress('');
+
+        if (!razorpayOrderId) {
+          // No razorpay order at all — just show success
+          toast.success('Order placed successfully! Waiting for admin approval.');
+          queryClient.invalidateQueries('myOrders');
+          return;
+        }
+
+        // ── DEMO MODE ──────────────────────────────────────────────────────────
+        // Show a Razorpay-style payment UI instead of calling the real SDK
+        if (razorpayOrderId.startsWith('order_DEMO')) {
+          setDemoPayment({
+            orderId: order._id,
+            razorpayOrderId,
+            amount,
+            orderNumber: order.orderNumber
+          });
+          return;
+        }
+
+        // ── LIVE MODE ──────────────────────────────────────────────────────────
+        // Real Razorpay order ID — open the checkout modal.
+        const scriptLoaded = await loadRazorpayScript();
+        if (!scriptLoaded) {
+          toast.error('Razorpay SDK failed to load. You can pay later from My Orders.');
+          return;
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: amount,
+          currency: currency || 'INR',
+          name: 'Opti-Oil Wholesale',
+          description: `Payment for order ${order?.orderNumber}`,
+          order_id: razorpayOrderId,
+          handler: async function (paymentResponse) {
+            try {
+              await paymentService.verifyPayment({
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+                orderId: order._id
+              });
+              toast.success('🎉 Payment successful! Waiting for admin approval.');
+              queryClient.invalidateQueries('myOrders');
+            } catch (err) {
+              toast.warning('Order placed but payment verification failed. Please pay from My Orders.');
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              toast.info('Payment cancelled. You can pay later from My Orders.');
+            }
+          },
+          prefill: {},
+          theme: { color: '#3498db' }
+        };
+
+        const razorpayInstance = new window.Razorpay(options);
+        razorpayInstance.open();
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to place order');
@@ -79,8 +144,20 @@ const WholesalerProducts = () => {
     toast.info('Removed from cart');
   };
 
-  const calculateTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.product.basePrice * item.quantity), 0);
+  const calculateTotals = () => {
+    let baseAmount = 0;
+    let gstAmount = 0;
+    cart.forEach(item => {
+      const subtotal = item.product.basePrice * item.quantity;
+      const gst = (subtotal * (item.product.gstRate || 0)) / 100;
+      baseAmount += subtotal;
+      gstAmount += gst;
+    });
+    return {
+      baseAmount,
+      gstAmount,
+      totalAmount: baseAmount + gstAmount
+    };
   };
 
   const handlePlaceOrder = () => {
@@ -107,6 +184,24 @@ const WholesalerProducts = () => {
   })) || [];
 
   const products = productsData?.data?.data?.products || [];
+
+  const handleDemoPaymentSuccess = async () => {
+    if (!demoPayment) return;
+    try {
+      await paymentService.verifyPayment({
+        razorpay_payment_id: `pay_DEMO${Date.now()}`,
+        razorpay_order_id: demoPayment.razorpayOrderId,
+        razorpay_signature: 'demo_signature',
+        orderId: demoPayment.orderId
+      });
+      toast.success('🎉 Payment successful! Waiting for admin approval.');
+      queryClient.invalidateQueries('myOrders');
+    } catch (err) {
+      toast.warning('Order placed! You can retry payment from My Orders.');
+    } finally {
+      setDemoPayment(null);
+    }
+  };
 
   return (
     <div>
@@ -224,7 +319,7 @@ const WholesalerProducts = () => {
                         ${product.basePrice?.toFixed(2)}
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        per {product.unit}
+                        per {product.unit} + {product.gstRate || 0}% GST
                       </div>
                     </div>
                     
@@ -275,7 +370,7 @@ const WholesalerProducts = () => {
               onClick={handlePlaceOrder}
               disabled={placeOrderMutation.isLoading || cart.length === 0}
             >
-              Place Order - ${calculateTotal().toFixed(2)}
+              Place Order - ${calculateTotals().totalAmount.toFixed(2)}
             </Button>
           </>
         }
@@ -304,7 +399,7 @@ const WholesalerProducts = () => {
                     <div style={{ flex: 1 }}>
                       <strong>{item.product.name}</strong>
                       <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        ${item.product.basePrice?.toFixed(2)} per {item.product.unit}
+                        ${item.product.basePrice?.toFixed(2)} per {item.product.unit} + {item.product.gstRate || 0}% GST
                       </div>
                     </div>
 
@@ -387,19 +482,38 @@ const WholesalerProducts = () => {
                   backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px',
                   display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+                  flexDirection: 'column',
+                  gap: '8px'
                 }}
               >
-                <strong>Total Amount:</strong>
-                <strong style={{ fontSize: '20px', color: 'var(--primary-color)' }}>
-                  ${calculateTotal().toFixed(2)}
-                </strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+                  <span>Subtotal:</span>
+                  <span>${calculateTotals().baseAmount.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+                  <span>GST:</span>
+                  <span>${calculateTotals().gstAmount.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+                  <strong>Total Amount:</strong>
+                  <strong style={{ fontSize: '20px', color: 'var(--primary-color)' }}>
+                    ${calculateTotals().totalAmount.toFixed(2)}
+                  </strong>
+                </div>
               </div>
             </>
           )}
         </div>
       </Modal>
+
+      {/* Demo Payment Modal */}
+      <DemoPaymentModal
+        isOpen={!!demoPayment}
+        onClose={() => setDemoPayment(null)}
+        onSuccess={handleDemoPaymentSuccess}
+        amount={demoPayment?.amount}
+        orderNumber={demoPayment?.orderNumber}
+      />
     </div>
   );
 };

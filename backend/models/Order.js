@@ -25,6 +25,16 @@ const orderItemSchema = new mongoose.Schema({
     required: [true, 'Unit price is required'],
     min: [0, 'Unit price cannot be negative']
   },
+  gstRate: {
+    type: Number,
+    min: [0, 'GST rate cannot be negative'],
+    max: [28, 'GST rate cannot exceed 28%'],
+    default: 0
+  },
+  gstAmount: {
+    type: Number,
+    default: 0
+  },
   subtotal: {
     type: Number,
     required: true,
@@ -54,6 +64,14 @@ const orderSchema = new mongoose.Schema(
         message: 'Order must contain at least one item'
       }
     },
+    baseTotalAmount: {
+      type: Number,
+      default: 0
+    },
+    totalGstAmount: {
+      type: Number,
+      default: 0
+    },
     totalAmount: {
       type: Number,
       required: [true, 'Total amount is required'],
@@ -76,6 +94,10 @@ const orderSchema = new mongoose.Schema(
       },
       default: PAYMENT_STATUS.PENDING
     },
+    paymentId: { type: String },
+    paymentMethod: { type: String },
+    paymentSignature: { type: String },
+    paidAt: { type: Date },
     shippingAddress: {
       street: String,
       city: String,
@@ -162,13 +184,22 @@ orderSchema.pre('save', async function (next) {
  * Calculate subtotals and total before save
  */
 orderSchema.pre('save', function (next) {
-  // Calculate subtotal for each item
+  let totalBase = 0;
+  let totalGst = 0;
+
+  // Calculate subtotal and GST for each item
   this.items.forEach(item => {
     item.subtotal = item.quantity * item.unitPrice;
+    item.gstAmount = (item.subtotal * (item.gstRate || 0)) / 100;
+    
+    totalBase += item.subtotal;
+    totalGst += item.gstAmount;
   });
   
-  // Calculate total amount
-  this.totalAmount = this.items.reduce((total, item) => total + item.subtotal, 0);
+  // Calculate total amounts
+  this.baseTotalAmount = totalBase;
+  this.totalGstAmount = totalGst;
+  this.totalAmount = totalBase + totalGst;
   
   next();
 });

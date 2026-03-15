@@ -26,7 +26,8 @@ const AdminProducts = () => {
     unit: 'L',
     brand: '',
     packagingSize: '',
-    specifications: ''
+    specifications: '',
+    gstRate: 0
   });
 
   const { data: productsData, isLoading } = useQuery(
@@ -93,7 +94,8 @@ const AdminProducts = () => {
       unit: 'L',
       brand: '',
       packagingSize: '',
-      specifications: ''
+      specifications: '',
+      gstRate: 0
     });
     setEditingProduct(null);
     setImageFile(null);
@@ -137,7 +139,9 @@ const AdminProducts = () => {
         return;
       }
       
-      if (formData[key]) {
+      // Use null/undefined check instead of falsy check
+      // so that numeric 0 values (like gstRate: 0) are still included
+      if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
         submitData.append(key, formData[key]);
       }
     });
@@ -162,7 +166,8 @@ const AdminProducts = () => {
       unit: product.unit,
       brand: product.brand || '',
       packagingSize: product.packagingSize || '',
-      specifications: product.specifications || ''
+      specifications: product.specifications || '',
+      gstRate: product.gstRate || 0
     });
     setImageFile(null);
     setImagePreview(product.image ? `http://localhost:5000${product.image}` : null);
@@ -233,10 +238,16 @@ const AdminProducts = () => {
       width: '120px'
     },
     {
-      header: 'Price',
+      header: 'Price (excl. GST)',
       accessor: 'basePrice',
       width: '120px',
       render: (row) => `$${row.basePrice?.toFixed(2)}/${row.unit}`
+    },
+    {
+      header: 'GST',
+      accessor: 'gstRate',
+      width: '80px',
+      render: (row) => `${row.gstRate || 0}%`
     },
     {
       header: 'Stock',
@@ -409,7 +420,7 @@ const AdminProducts = () => {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormInput
-              label="Base Price"
+              label="Base Price (₹)"
               name="basePrice"
               type="number"
               step="0.01"
@@ -435,6 +446,54 @@ const AdminProducts = () => {
               ]}
               required
             />
+          </div>
+
+          {/* GST Rate — separate row for clarity */}
+          <div style={{ marginTop: '4px' }}>
+            <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151', display: 'block', marginBottom: '6px' }}>
+              GST Rate (%)
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {[0, 5, 12, 18, 28].map(rate => (
+                <button
+                  key={rate}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, gstRate: rate })}
+                  style={{
+                    padding: '8px 20px',
+                    borderRadius: '8px',
+                    border: `2px solid ${Number(formData.gstRate) === rate ? '#3498db' : '#e5e7eb'}`,
+                    background: Number(formData.gstRate) === rate ? '#eff6ff' : '#f9fafb',
+                    color: Number(formData.gstRate) === rate ? '#1d6fa8' : '#374151',
+                    fontWeight: '600',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {rate}%
+                </button>
+              ))}
+              <input
+                type="number"
+                placeholder="Custom"
+                min="0"
+                max="28"
+                value={[0,5,12,18,28].includes(Number(formData.gstRate)) ? '' : formData.gstRate}
+                onChange={(e) => setFormData({ ...formData, gstRate: e.target.value })}
+                style={{
+                  padding: '8px 12px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '8px',
+                  width: '90px',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              />
+            </div>
+            <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+              Selected: <strong>{formData.gstRate}%</strong> GST · Price incl. GST: <strong>₹{formData.basePrice ? ((Number(formData.basePrice) * (1 + Number(formData.gstRate) / 100)).toFixed(2)) : '—'}</strong>
+            </p>
           </div>
           
           <FormInput

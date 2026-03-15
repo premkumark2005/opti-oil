@@ -60,7 +60,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
 
   // Optimize query with lean() and select specific fields
   const products = await Product.find(filter)
-    .select('name sku category description basePrice unit brand packagingSize image isActive')
+    .select('name sku category description basePrice gstRate unit brand packagingSize image isActive')
     .populate('createdBy', 'name')
     .sort(req.query.sort || '-createdAt')
     .skip(skip)
@@ -141,7 +141,8 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     brand,
     packagingSize,
     specifications,
-    reorderLevel
+    reorderLevel,
+    gstRate
   } = req.body;
 
   // Check if SKU already exists
@@ -166,6 +167,7 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     packagingSize,
     image: imagePath,
     specifications,
+    gstRate,
     createdBy: req.user.id
   });
 
@@ -199,7 +201,8 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
     brand,
     packagingSize,
     specifications,
-    isActive
+    isActive,
+    gstRate
   } = req.body;
 
   const product = await Product.findById(id);
@@ -232,6 +235,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
   if (packagingSize !== undefined) product.packagingSize = packagingSize;
   if (specifications) product.specifications = specifications;
   if (isActive !== undefined) product.isActive = isActive;
+  if (gstRate !== undefined) product.gstRate = gstRate;
   
   product.modifiedBy = req.user.id;
   await product.save();
@@ -286,7 +290,7 @@ export const getProductsByCategory = asyncHandler(async (req, res, next) => {
   const total = await Product.countDocuments(filter);
 
   const products = await Product.find(filter)
-    .select('name sku description basePrice unit brand packagingSize image')
+    .select('name sku description basePrice gstRate unit brand packagingSize image')
     .sort('name')
     .skip(skip)
     .limit(limit)

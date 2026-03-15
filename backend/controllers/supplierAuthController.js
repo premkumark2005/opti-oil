@@ -110,7 +110,7 @@ export const getSupplierProfile = asyncHandler(async (req, res, next) => {
  * @access  Private (Supplier)
  */
 export const updateSupplierProfile = asyncHandler(async (req, res, next) => {
-  const { name, phone, companyName, address } = req.body;
+  const { name, phone, companyName, address, accountHolderName, bankAccountNumber, bankIFSC } = req.body;
 
   const supplier = await User.findById(req.user._id);
 
@@ -123,6 +123,11 @@ export const updateSupplierProfile = asyncHandler(async (req, res, next) => {
   if (phone) supplier.phone = phone;
   if (companyName) supplier.businessName = companyName;
   if (address) supplier.address = address;
+  
+  // Update bank details
+  if (accountHolderName !== undefined) supplier.accountHolderName = accountHolderName;
+  if (bankAccountNumber !== undefined) supplier.bankAccountNumber = bankAccountNumber;
+  if (bankIFSC !== undefined) supplier.bankIFSC = bankIFSC;
 
   await supplier.save();
 

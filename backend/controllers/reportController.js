@@ -1,6 +1,7 @@
 import Inventory from '../models/Inventory.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
+import RawMaterialOrder from '../models/RawMaterialOrder.js';
 import InventoryTransaction from '../models/InventoryTransaction.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { sendSuccess } from '../utils/response.js';
@@ -747,3 +748,75 @@ export const getProductPerformanceReport = asyncHandler(async (req, res, next) =
   }, 'Product performance report generated successfully');
 });
 
+/**
+ * @desc    Get payment report summary
+ * @route   GET /api/reports/payments
+ * @access  Private/Admin
+ */
+export const getPaymentReport = asyncHandler(async (req, res, next) => {
+  const incomingPayments = await Order.aggregate([
+    {
+      $group: {
+        _id: '$paymentStatus',
+        totalAmount: { $sum: '$totalAmount' },
+        count: { $sum: 1 },
+        items: { $push: '$items' }
+      }
+    }
+  ]);
+
+  const outgoingPayments = await RawMaterialOrder.aggregate([
+    {
+      $group: {
+        _id: '$supplierPaymentStatus',
+        totalAmount: { $sum: '$totalPrice' },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  let totalReceived = 0;
+  let totalPendingIncoming = 0;
+  let gstCollected = 0;
+
+  incomingPayments.forEach(p => {
+    if (p._id === 'completed' || p._id === 'paid') {
+      totalReceived += p.totalAmount;
+      // Calculate GST simple loop
+      p.items.forEach(orderItems => {
+        orderItems.forEach(item => {
+          const subtotal = item.quantity * item.unitPrice;
+          const gstAmount = subtotal * ((item.gstRate || 0) / 100);
+          gstCollected += gstAmount;
+        });
+      });
+    } else if (p._id === 'pending') {
+      totalPendingIncoming += p.totalAmount;
+    }
+  });
+
+  let totalSent = 0;
+  let totalPendingOutgoing = 0;
+
+  outgoingPayments.forEach(p => {
+    if (p._id === 'Paid') {
+      totalSent += p.totalAmount;
+    } else if (p._id === 'Pending') {
+      totalPendingOutgoing += p.totalAmount;
+    }
+  });
+
+  sendSuccess(res, HTTP_STATUS.OK, {
+    report: {
+      totalReceived: Math.round(totalReceived * 100) / 100,
+      totalSent: Math.round(totalSent * 100) / 100,
+      totalPending: Math.round((totalPendingIncoming + totalPendingOutgoing) * 100) / 100,
+      gstCollected: Math.round(gstCollected * 100) / 100,
+      details: {
+        incomingPayments,
+        outgoingPayments
+      }
+    },
+    generatedAt: new Date()
+  }, 'Payment report generated successfully');
+});

@@ -54,12 +54,13 @@ export const generateInvoice = (order) => {
     item.product?.sku || 'N/A',
     item.quantity,
     `$${item.unitPrice?.toFixed(2)}`,
-    `$${(item.quantity * item.unitPrice).toFixed(2)}`
+    `${item.gstRate || 0}%`,
+    `$${item.subtotal?.toFixed(2)}`
   ]);
   
   autoTable(doc, {
     startY: startY,
-    head: [['Product', 'SKU', 'Quantity', 'Unit Price', 'Total']],
+    head: [['Product', 'SKU', 'Quantity', 'Unit Price', 'GST', 'Total']],
     body: tableData,
     theme: 'striped',
     headStyles: { 
@@ -72,11 +73,12 @@ export const generateInvoice = (order) => {
       cellPadding: 5
     },
     columnStyles: {
-      0: { cellWidth: 60 },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 25, halign: 'center' },
-      3: { cellWidth: 30, halign: 'right' },
-      4: { cellWidth: 35, halign: 'right' }
+      0: { cellWidth: 50 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 20, halign: 'center' },
+      3: { cellWidth: 25, halign: 'right' },
+      4: { cellWidth: 20, halign: 'right' },
+      5: { cellWidth: 30, halign: 'right' }
     }
   });
   
@@ -88,12 +90,12 @@ export const generateInvoice = (order) => {
   
   doc.setFontSize(10);
   doc.text('Subtotal:', 130, finalY + 7);
-  doc.text(`$${order.totalAmount?.toFixed(2)}`, 190, finalY + 7, { align: 'right' });
+  doc.text(`$${order.baseTotalAmount?.toFixed(2) || '0.00'}`, 190, finalY + 7, { align: 'right' });
   
-  // Tax (if applicable)
-  const tax = order.tax || 0;
+  // Tax (GST)
+  const tax = order.totalGstAmount || 0;
   if (tax > 0) {
-    doc.text('Tax:', 130, finalY + 14);
+    doc.text('GST:', 130, finalY + 14);
     doc.text(`$${tax.toFixed(2)}`, 190, finalY + 14, { align: 'right' });
   }
   
@@ -105,7 +107,7 @@ export const generateInvoice = (order) => {
   doc.line(130, finalY + 18, 190, finalY + 18);
   
   doc.text('Total Amount:', 130, finalY + 25);
-  doc.text(`$${(order.totalAmount + tax).toFixed(2)}`, 190, finalY + 25, { align: 'right' });
+  doc.text(`$${order.totalAmount?.toFixed(2) || '0.00'}`, 190, finalY + 25, { align: 'right' });
   
   // Payment Status
   doc.setFont(undefined, 'normal');

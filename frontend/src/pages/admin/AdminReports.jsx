@@ -36,6 +36,12 @@ const AdminReports = () => {
     { enabled: activeReport === 'products' }
   );
 
+  const { data: paymentReport, isLoading: paymentLoading, refetch: refetchPayments } = useQuery(
+    'paymentReport',
+    () => reportService.getPaymentReport(),
+    { enabled: activeReport === 'payments' }
+  );
+
   const handleExportInventory = () => {
     const report = inventoryReport?.data?.data?.report;
     if (!report || !report.inventory) {
@@ -337,7 +343,43 @@ const AdminReports = () => {
     );
   };
 
-  const isLoading = inventoryLoading || lowStockLoading || orderLoading || productLoading;
+  const renderPaymentReport = () => {
+    const report = paymentReport?.data?.data?.report;
+    if (!report) return null;
+
+    return (
+      <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ fontSize: '24px', color: '#2ecc71' }}>${report.totalReceived?.toFixed(2) || '0.00'}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Total Payments Received</p>
+            </div>
+          </Card>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ fontSize: '24px', color: '#e74c3c' }}>${report.totalSent?.toFixed(2) || '0.00'}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Total Payouts Sent</p>
+            </div>
+          </Card>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ fontSize: '24px', color: '#f39c12' }}>${report.totalPending?.toFixed(2) || '0.00'}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Pending Payments</p>
+            </div>
+          </Card>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ fontSize: '24px', color: '#3498db' }}>${report.gstCollected?.toFixed(2) || '0.00'}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>GST Collected</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
+  const isLoading = inventoryLoading || lowStockLoading || orderLoading || productLoading || paymentLoading;
 
   return (
     <div>
@@ -392,6 +434,12 @@ const AdminReports = () => {
         >
           Product Performance
         </Button>
+        <Button
+          variant={activeReport === 'payments' ? 'primary' : 'outline'}
+          onClick={() => setActiveReport('payments')}
+        >
+          Payments & GST
+        </Button>
       </div>
 
       {isLoading ? (
@@ -404,6 +452,7 @@ const AdminReports = () => {
           {activeReport === 'lowStock' && renderLowStockReport()}
           {activeReport === 'orders' && renderOrderReport()}
           {activeReport === 'products' && renderProductReport()}
+          {activeReport === 'payments' && renderPaymentReport()}
         </>
       )}
     </div>
