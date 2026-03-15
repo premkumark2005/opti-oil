@@ -12,6 +12,8 @@ import { paymentService } from '../../services/paymentService';
 import { loadRazorpayScript } from '../../utils/razorpayUtils';
 import DemoPaymentModal from '../../components/DemoPaymentModal';
 
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+
 const WholesalerProducts = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -277,7 +279,7 @@ const WholesalerProducts = () => {
                 }}>
                   {product.image ? (
                     <img 
-                      src={`http://localhost:5000${product.image}`} 
+                      src={`${BACKEND_URL}${product.image}`} 
                       alt={product.name}
                       style={{ 
                         width: '100%', 

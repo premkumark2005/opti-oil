@@ -9,6 +9,8 @@ import FormInput from '../../components/FormInput';
 import Badge from '../../components/Badge';
 import { productService } from '../../services/productService';
 
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+
 const AdminProducts = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -170,7 +172,7 @@ const AdminProducts = () => {
       gstRate: product.gstRate || 0
     });
     setImageFile(null);
-    setImagePreview(product.image ? `http://localhost:5000${product.image}` : null);
+    setImagePreview(product.image ? `${BACKEND_URL}${product.image}` : null);
     setShowModal(true);
   };
 
@@ -188,7 +190,7 @@ const AdminProducts = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {row.image ? (
             <img 
-              src={`http://localhost:5000${row.image}`} 
+              src={`${BACKEND_URL}${row.image}`} 
               alt={row.name}
               style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
               onError={(e) => {

@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
+const backendUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
+const apiBaseUrl = backendUrl ? `${backendUrl}/api` : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   timeout: 10000, // 10 second timeout (reduced from 30s)
   headers: {
     'Content-Type': 'application/json'

@@ -11,7 +11,10 @@ import mongoose from 'mongoose';
 import { ingestAllData } from '../services/dataIngestionService.js';
 import { buildIndex } from '../services/vectorStoreService.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/edible-oil-inventory';
+const MONGODB_URI =
+  process.env.MONGO_URI ||
+  process.env.MONGODB_URI ||
+  'mongodb://localhost:27017/edible-oil-inventory';
 
 async function main() {
   console.log('📦 Opti-Oil — RAG Data Ingestion');

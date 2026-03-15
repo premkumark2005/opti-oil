@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+    if (!mongoUri) {
+      throw new Error('Missing MongoDB connection string. Set MONGO_URI (or MONGODB_URI).');
+    }
+
     const options = {
       // useNewUrlParser and useUnifiedTopology are no longer needed in Mongoose 6+
       maxPoolSize: 10,
@@ -9,7 +15,7 @@ const connectDB = async () => {
       socketTimeoutMS: 45000,
     };
 
-    const conn = await mongoose.connect(process.env.MONGO_URI, options);
+    const conn = await mongoose.connect(mongoUri, options);
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
