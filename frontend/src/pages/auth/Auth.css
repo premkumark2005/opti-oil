@@ -3,38 +3,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: 24px;
+  background: radial-gradient(circle at top, #e0f2ff 0%, #bfdbfe 35%, #e5f2ff 100%);
 }
 
 .auth-card {
-  background-color: var(--bg-primary);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  padding: 40px;
+  background: linear-gradient(145deg, #ffffff 0%, #f5faff 45%, #ffffff 100%);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  padding: 40px 40px 32px;
   width: 100%;
-  max-width: 450px;
+  max-width: 460px;
+  border: 1px solid rgba(59, 130, 246, 0.12);
 }
 
 .auth-card-large {
-  max-width: 600px;
+  max-width: 620px;
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .auth-header h1 {
   font-size: 28px;
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: 8px;
+  font-weight: 800;
+  color: #1d4ed8;
+  margin-bottom: 4px;
 }
 
 .auth-header p {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: #64748b;
 }
 
 .auth-form {
@@ -47,6 +48,7 @@
   gap: 8px;
   font-size: 14px;
   cursor: pointer;
+  color: #475569;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -62,16 +64,16 @@
 .auth-footer {
   text-align: center;
   padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #e2e8f0;
 }
 
 .auth-footer p {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: #64748b;
 }
 
 .auth-link {
-  color: var(--primary-color);
+  color: #1d4ed8;
   font-weight: 600;
   text-decoration: none;
 }

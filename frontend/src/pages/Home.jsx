@@ -2,161 +2,292 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 animate-slideDown">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
-                <span className="text-2xl">🛢️</span>
+    <div className="min-h-screen bg-blue-50 text-slate-900">
+      {/* 1️⃣ Hero Section */}
+      <header className="border-b border-blue-100 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:flex-row lg:items-center lg:justify-between">
+          {/* Logo + headline */}
+          <div className="flex flex-1 flex-col gap-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 shadow-lg shadow-amber-500/40">
+                  <span className="text-2xl">🛢️</span>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300/90">
+                    Opti-Oil
+                  </p>
+                  <p className="text-sm font-medium text-slate-600">
+                    Smart Oil Distribution Cloud
+                  </p>
+                </div>
               </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Opti-Oil</h1>
+
+              {/* Top-right login shortcuts */}
+              <div className="hidden items-center gap-3 sm:flex">
+                <Link
+                  to="/login"
+                  className="rounded-full border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:border-blue-400 hover:text-blue-800 bg-white/80"
+                >
+                  Admin Login
+                </Link>
+                <Link
+                  to="/login"
+                  className="rounded-full border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:border-blue-400 hover:text-blue-800 bg-white/80"
+                >
+                  Wholesaler Login
+                </Link>
+                <Link
+                  to="/supplier/login"
+                  className="rounded-full border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:border-blue-400 hover:text-blue-800 bg-white/80"
+                >
+                  Supplier Login
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-2 max-w-2xl space-y-4">
+              <h1 className="text-balance text-3xl font-extrabold tracking-tight text-blue-950 sm:text-4xl lg:text-5xl">
+                Manage your edible oil supply chain from one intelligent platform.
+              </h1>
+              <p className="max-w-xl text-sm sm:text-base text-slate-600">
+                Track inventory, coordinate suppliers, and process wholesale orders in real time.
+              </p>
+            </div>
+
+            {/* Hero CTA buttons */}
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center rounded-xl bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-amber-300"
+              >
+                Login as Admin
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center rounded-xl bg-sky-500/90 px-5 py-2.5 text-sm font-semibold text-slate-50 hover:bg-sky-400"
+              >
+                Login as Wholesaler
+              </Link>
+              <Link
+                to="/supplier/login"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-500/90 px-5 py-2.5 text-sm font-semibold text-slate-50 hover:bg-emerald-400"
+              >
+                Login as Supplier
+              </Link>
+            </div>
+          </div>
+
+          {/* Simple dashboard-style preview block */}
+          <div className="mt-6 w-full max-w-md flex-1 rounded-2xl border border-blue-100 bg-white p-4 shadow-lg lg:mt-0">
+            <p className="text-xs font-semibold text-slate-600">Dashboard preview</p>
+            <div className="mt-3 space-y-2 rounded-xl bg-blue-50 p-3">
+              <div className="flex items-center justify-between text-xs text-slate-700">
+                <span>Today&apos;s orders</span>
+                <span className="font-semibold text-emerald-300">32</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-700">
+                <span>Warehouses online</span>
+                <span className="font-semibold text-sky-300">5</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-700">
+                <span>Suppliers connected</span>
+                <span className="font-semibold text-amber-300">12</span>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-20 animate-slideDown">
-          <h2 className="text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
-            Welcome to <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Opti-Oil</span>
-          </h2>
-          <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Comprehensive Oil Distribution Management System for Efficient Operations
-          </p>
-        </div>
-
-        {/* Cards Section */}
-        <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto mb-20">
-          {/* Admin & Wholesaler Card */}
-          <div className="bg-white rounded-3xl shadow-2xl p-10 hover:shadow-3xl transition-all transform hover:scale-105 hover:-translate-y-2 duration-300 border border-blue-100 animate-fadeIn">
-            <div className="text-center mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <span className="text-5xl">👥</span>
+      <main>
+        {/* 2️⃣ Live Operations Section */}
+        <section className="border-b border-blue-100 bg-white px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-500">
+              Live Operations Overview
+            </h2>
+            <div className="mt-5 grid gap-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm sm:grid-cols-4">
+              <div className="flex flex-col gap-1 rounded-xl bg-white p-3">
+                <span className="text-xs text-slate-500">Optimal Stock Coverage</span>
+                <span className="text-lg font-semibold text-blue-700">98%</span>
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-3">
-                Admin & Wholesaler
-              </h3>
-              <p className="text-gray-600 text-lg">
-                Manage inventory, orders, and distribution
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <Link
-                to="/login"
-                className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-xl transition-all text-center shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <span className="text-lg">Login</span>
-              </Link>
-              <Link
-                to="/register"
-                className="block w-full bg-white hover:bg-blue-50 text-blue-600 font-bold py-4 px-6 rounded-xl border-3 border-blue-600 transition-all text-center shadow-md hover:shadow-lg transform hover:scale-105"
-              >
-                <span className="text-lg">Register</span>
-              </Link>
-            </div>
-
-            <div className="mt-8 pt-6 border-t-2 border-gray-200">
-              <p className="text-sm text-gray-500 text-center font-medium">
-                For administrators and wholesaler partners
-              </p>
+              <div className="flex flex-col gap-1 rounded-xl bg-white p-3">
+                <span className="text-xs text-slate-500">Orders Processing</span>
+                <span className="text-lg font-semibold text-blue-700">32</span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-white p-3">
+                <span className="text-xs text-slate-500">Active Suppliers</span>
+                <span className="text-lg font-semibold text-blue-700">12</span>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl bg-white p-3">
+                <span className="text-xs text-slate-500">Inventory Health</span>
+                <span className="text-lg font-semibold text-blue-700">Good</span>
+              </div>
             </div>
           </div>
+        </section>
 
-          {/* Supplier Card */}
-          <div className="bg-white rounded-3xl shadow-2xl p-10 hover:shadow-3xl transition-all transform hover:scale-105 hover:-translate-y-2 duration-300 border border-green-100 animate-fadeIn" style={{animationDelay: '0.2s'}}>
-            <div className="text-center mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <span className="text-5xl">🚚</span>
+        {/* 3️⃣ Workflow Visualization */}
+        <section className="border-b border-blue-100 bg-blue-50 px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl space-y-4 text-slate-900">
+            <h2 className="text-lg font-semibold text-blue-950">
+              End-to-End Oil Flow Management
+            </h2>
+            <p className="text-sm text-slate-700">
+              Supplier → Warehouse → Production → Wholesaler
+            </p>
+
+            <div className="mt-4 grid gap-4 rounded-2xl border border-blue-100 bg-white p-4 text-sm sm:grid-cols-4">
+              <div className="space-y-1 rounded-xl bg-blue-50 p-3">
+                <p className="font-semibold text-blue-900">Supplier</p>
+                <p className="text-xs text-slate-700">Raw materials</p>
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-3">
-                Supplier Portal
-              </h3>
-              <p className="text-gray-600 text-lg">
-                Manage raw materials and orders
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <Link
-                to="/supplier/login"
-                className="block w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl transition-all text-center shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <span className="text-lg">Supplier Login</span>
-              </Link>
-              <Link
-                to="/supplier/signup"
-                className="block w-full bg-white hover:bg-green-50 text-green-600 font-bold py-4 px-6 rounded-xl border-3 border-green-600 transition-all text-center shadow-md hover:shadow-lg transform hover:scale-105"
-              >
-                <span className="text-lg">Supplier Signup</span>
-              </Link>
-            </div>
-
-            <div className="mt-8 pt-6 border-t-2 border-gray-200">
-              <p className="text-sm text-gray-500 text-center font-medium">
-                For raw material suppliers (Requires admin approval)
-              </p>
+              <div className="space-y-1 rounded-xl bg-blue-50 p-3">
+                <p className="font-semibold text-blue-900">Production / Warehouse</p>
+                <p className="text-xs text-slate-700">Storage and processing</p>
+              </div>
+              <div className="space-y-1 rounded-xl bg-blue-50 p-3">
+                <p className="font-semibold text-blue-900">Finished Oil Inventory</p>
+                <p className="text-xs text-slate-700">Ready for dispatch</p>
+              </div>
+              <div className="space-y-1 rounded-xl bg-blue-50 p-3">
+                <p className="font-semibold text-blue-900">Wholesaler Orders</p>
+                <p className="text-xs text-slate-700">Bulk order fulfillment</p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Features Section */}
-        <div className="mt-24">
-          <h3 className="text-4xl font-bold text-center text-gray-900 mb-16">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Key Features</span>
-          </h3>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
-                <span className="text-4xl">📦</span>
+        {/* 4️⃣ Role-Based System Section */}
+        <section className="border-b border-blue-100 bg-white px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-lg font-semibold text-blue-950">Role-based dashboards</h2>
+            <p className="mt-2 text-sm text-slate-700">
+              Clear workspaces for admins, wholesalers, and suppliers.
+            </p>
+
+            <div className="mt-6 grid gap-4 text-sm md:grid-cols-3">
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <p className="mb-2 text-xl text-blue-900">👑 Admin Control Center</p>
+                <ul className="space-y-1 text-slate-700">
+                  <li>• Manage products</li>
+                  <li>• Monitor inventory</li>
+                  <li>• Approve orders</li>
+                  <li>• Track suppliers</li>
+                </ul>
               </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                Inventory Management
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Real-time tracking of products and raw materials with smart alerts
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
-                <span className="text-4xl">🛒</span>
+
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <p className="mb-2 text-xl text-blue-900">🏬 Wholesaler Portal</p>
+                <ul className="space-y-1 text-slate-700">
+                  <li>• Browse products</li>
+                  <li>• Place bulk orders</li>
+                  <li>• Track deliveries</li>
+                  <li>• View order history</li>
+                </ul>
               </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                Order Processing
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Streamlined order workflow from creation to delivery tracking
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform">
-                <span className="text-4xl">📊</span>
+
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <p className="mb-2 text-xl text-blue-900">🚚 Supplier Dashboard</p>
+                <ul className="space-y-1 text-slate-700">
+                  <li>• Manage raw materials</li>
+                  <li>• View purchase orders</li>
+                  <li>• Update deliveries</li>
+                  <li>• Track payments</li>
+                </ul>
               </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                Analytics & Reports
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Comprehensive insights and data-driven decision making tools
-              </p>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-10 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-300 text-lg">
-            © 2026 Opti-Oil. All rights reserved.
-          </p>
-          <p className="text-gray-400 text-sm mt-2">
-            Empowering oil distribution businesses with smart technology
-          </p>
+        {/* 5️⃣ Feature Highlights */}
+        <section className="border-b border-blue-100 bg-blue-50 px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-lg font-semibold text-blue-950">Key features</h2>
+
+            <div className="mt-6 grid gap-4 text-sm md:grid-cols-4">
+              <div className="rounded-2xl border border-blue-100 bg-white p-4">
+                <p className="mb-1 text-xl text-blue-900">📦 Smart Inventory</p>
+                <p className="text-slate-700">
+                  Monitor stock levels in real time and prevent shortages with automated alerts.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-blue-100 bg-white p-4">
+                <p className="mb-1 text-xl text-blue-900">🛒 Connected Ordering</p>
+                <p className="text-slate-700">
+                  Link suppliers, admins, and wholesalers in one seamless order pipeline.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-blue-100 bg-white p-4">
+                <p className="mb-1 text-xl text-blue-900">📊 Analytics &amp; Insights</p>
+                <p className="text-slate-700">
+                  Track sales trends, inventory movement, and supplier performance.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-blue-100 bg-white p-4">
+                <p className="mb-1 text-xl text-blue-900">🤖 AI Assistant</p>
+                <p className="text-slate-700">
+                  Ask questions about sales, inventory, and orders using the built-in AI chatbot.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 6️⃣ Platform Benefits Section */}
+        <section className="border-b border-blue-100 bg-white px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <h2 className="text-lg font-semibold text-blue-950">
+              Built for modern oil distribution businesses
+            </h2>
+            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 md:grid-cols-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-slate-700">
+                Real-time data synchronization
+              </div>
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-slate-700">
+                Centralized supply chain management
+              </div>
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-slate-700">
+                Automated inventory monitoring
+              </div>
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-slate-700">
+                Secure payment and transaction tracking
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* 7️⃣ Footer Section */}
+      <footer className="bg-white px-4 py-8 text-xs text-slate-500 sm:px-6 lg:px-8 border-t border-blue-100">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-blue-900">Opti-Oil</p>
+            <p className="text-xs text-slate-500">Smart Oil Distribution Platform</p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 text-xs">
+            <Link to="/login" className="text-blue-700 hover:text-blue-900">
+              Admin Login
+            </Link>
+            <Link to="/supplier/login" className="text-blue-700 hover:text-blue-900">
+              Supplier Portal
+            </Link>
+            <Link to="/login" className="text-blue-700 hover:text-blue-900">
+              Wholesaler Portal
+            </Link>
+            <button type="button" className="text-slate-600 hover:text-slate-800">
+              About
+            </button>
+            <button type="button" className="text-slate-600 hover:text-slate-800">
+              Contact
+            </button>
+            <button type="button" className="text-slate-600 hover:text-slate-800">
+              Privacy
+            </button>
+          </div>
+
+          <p className="text-[0.7rem] text-slate-600">© 2026 Opti-Oil</p>
         </div>
       </footer>
     </div>

@@ -180,10 +180,29 @@ const AdminInventory = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1>Inventory Management</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
+        <h1
+          style={{
+            margin: 0,
+            padding: '12px 18px',
+            borderLeft: '6px solid var(--accent-color)',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(255, 255, 255, 0.96))',
+            color: 'var(--primary-color)',
+            fontSize: '32px',
+            fontWeight: 800,
+            boxShadow: 'var(--shadow)'
+          }}
+        >
+          Inventory Management
+        </h1>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <Button variant="secondary" onClick={() => setShowStockInModal(true)}>
+          <Button
+            variant="success"
+            size="large"
+            className="inventory-stock-in-button"
+            onClick={() => setShowStockInModal(true)}
+          >
             + Stock In
           </Button>
           <Button variant="danger" onClick={() => setShowStockOutModal(true)}>

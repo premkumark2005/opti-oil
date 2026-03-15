@@ -140,7 +140,7 @@ const AdminSupplierManagement = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-blue-50 min-h-screen">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Supplier Management</h1>
         <p className="text-gray-600 text-lg">Manage supplier accounts and approvals</p>

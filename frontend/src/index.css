@@ -87,9 +87,9 @@
   --text-secondary: #6b7280;
   --text-light: #9ca3af;
   
-  /* Background Colors */
+  /* Background Colors (blue + white theme) */
   --bg-primary: #FFFFFF;
-  --bg-secondary: #F3F4F6;
+  --bg-secondary: #E5F2FF; /* very light blue */
   --bg-card: #FFFFFF;
   
   /* Border & Shadow */
