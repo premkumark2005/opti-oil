@@ -12,7 +12,9 @@ import { paymentService } from '../../services/paymentService';
 import { loadRazorpayScript } from '../../utils/razorpayUtils';
 import DemoPaymentModal from '../../components/DemoPaymentModal';
 
-const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
+  .replace(/\/api\/?$/, '')  // strip trailing /api
+  .replace(/\/+$/, '');     // strip any remaining trailing slashes
 
 const WholesalerProducts = () => {
   const queryClient = useQueryClient();

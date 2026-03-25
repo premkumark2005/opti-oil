@@ -9,7 +9,9 @@ import FormInput from '../../components/FormInput';
 import Badge from '../../components/Badge';
 import { productService } from '../../services/productService';
 
-const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
+  .replace(/\/api\/?$/, '')  // strip trailing /api
+  .replace(/\/+$/, '');     // strip any remaining trailing slashes
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
